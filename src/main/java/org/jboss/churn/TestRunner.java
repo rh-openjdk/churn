@@ -153,17 +153,31 @@ public class TestRunner extends Thread
     /**
      * main method allowing test to be run. command line options are as follows:
      * <ul>
-     *     <li>-blocks N -- number of 256 byte blocks allocated per work item (default 4)</li>
-     *     <li>-items N -- total number of work items to retain in map / (1024 * 1024) (default 4)</li>
-     *     <li>-threads N -- number of worker threads to run in parallel (default 8)</li>
-     *     <li>-iterationCount N -- number of passes over map either replacing or promoting entries (defaults to 200)</li>
+     *     <li>-blocks B -- number of 256 byte blocks allocated per work item (default 4)</li>
+     *     <li>-items I -- total number of work items to retain in map / (1024 * 1024) (default 4)</li>
+     *     <li>-threads T -- number of worker threads to run in parallel (default 8)</li>
+     *     <li>-iterations N -- number of passes over map either replacing or promoting entries (defaults to 200)</li>
+     *     <li>-computations C -- number of compute/write operations to each work items data block (defaults to 32)</li>
+     *     <li>-slices S -- number work item allocations/computations which constitute each timed 'task' (defaults to 100).</li>
+     *     <li>-yield Y -- if 0 then a thread will yield after processing each slice if positive i twill sleep for Y msecs
+     *     (defaults to -1)</li>
      * </ul>
      *
      * The defaults mean that the N thread short term maps will hold a little over 4Gb of data as, eventually,
-     * will the one shared long term map. Each of the 8 threads will populate and then iteratively
+     * will the long term maps. Each of the 8 threads will populate and then iteratively
      * update the contents of its short term map with ~ 1/2 Gb of data and this data will slowly be promoted
-     * into the long term map. So, the default settings should fit into and rapidly start to stress a JVM with
+     * into its long term map. So, the default settings should fit into and rapidly start to stress a JVM with
      * 12 - 16 Gb of heap for any of the standard OpenJDK GCs (your mileage may vary).
+     * <p/>
+     * You can control the allocate to compute ratio by configuring C. You can also control how long a sample 'task'
+     * takes to complete on average by configuring S and C (where a task coprises S work item allocate/compute
+     * operations). Variations above this average time in th eoutput histogram wil be down to pauses introduced
+     * by the GC or, possibly, the OS.
+     *
+     * The program prints a totoal execution time and a histogram displaying the task times on a logartihmic scale.
+     * New gen GC pauses should mean that some of the task execution times will be in the 10s to 100s msecs range.
+     * Old gen GC pauses should mean that some of the task execution times will be in the 1s to 10s msecs range.
+     * Of course your mileage may vary depending upon number and type of cores, heap sizes etc.
      *
      * @param args
      */

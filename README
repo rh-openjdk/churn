@@ -1,4 +1,10 @@
+Building
+--------
+
 You build the churn application using mvn package.
+
+Running
+-------
 
 There are scripts in the bin directory to run it with the various GCs
 available in Hotspot/OpenJDK
@@ -15,11 +21,14 @@ run-g1.sh the fiels will be
   outlog-g1
 
 You can also run with the compressed oops optimization enabled using
-the follwoing scripts
+the following scripts
 
   run-g1-coops.sh
   run-cms-coops.sh
   run-par-coops.sh
+
+Arguments
+---------
 
 The arguments to the program (and the run scripts) are optional in
 which case the program uses suitable defaults
@@ -27,28 +36,80 @@ which case the program uses suitable defaults
   -blocks B [default 4] how many data blocks to allocate per work item
   -items I [default 4] how many million local/global work items in the work set
   -threads T [default 8] how many threads to use to do the processing
-  -iterations N [default 200]how many times to update the local/gobal work set
+  -iterations N [default 200] how many times to update the local/gobal work set
+  -computations C [default 32] how many computes/write operations are
+   performed on each allocated object 
+  -slices S [default 100] number of allocate/compute operations per timed task
+  -yield Y [default -1] yield (Y = 0) or sleep (for Y msecs) at end of slice
+  
 
-where B, I, T and N need to be supplied as positive integers.
+where B, I, T, N, C and S need to be supplied as positive integers
+and Y may be 0 or a positive.
 
-The program repeatedly updates a local (i.e. short lived) work set by
-allocating and inserting work items. So, this work set is continually
-being updated and most of the items are dropped with only a short life
-time.
+Output
+------
+
+The program output includes a total time for execution of the test
+program and a histogram output showing the distribution of task
+execution times for each nominal 'task' run by the program. A task
+comprises a certain, configurable number of allocate and compute
+operations on a working set of objects.
+
+Operation
+---------
+
+The test program repeatedly updates a local (i.e. short lived) work
+set by allocating and inserting work items. So, this work set is
+continually being updated and most of the items are dropped with a
+relatively short life time.
 
 1 in 10 work items are also inserted into the global (long lived) work
-set at create time. These items therefore tend to have a lifetime 10x
-> than the normal lifetime.
+set as well as the lcoal set. These items therefore tend to have a
+lifetime approximately 10x > than the normal lifetime.
 
-The local and global work sets are each divided into T chunks updated
-independently by each of the T threads. Each thread updates its work
-set N times.
+The local and global work sets (eventually) contain I million items
+are each divided into T chunks updated independently by each of the T
+threads. So, modifying the thread count does not affect the total work
+load or data set size.
 
-Each time a complete chunk is updated there is a 1 in 100 chance that
-the thread will purge all its entries from the global work set,
+Each thread loops repeating updates to the work set N times. So, the
+total number of allocations and insertions into the local work set
+accumulated across all threads is (I * N) million and each thread
+creates (I / T) * N items.
+
+Each time a chunk of I / T items is updated there is a 1 in 100 chance
+that the thread will purge all its entries from the global work set,
 simulating an application phase change.
 
 Items normally hold B 32 byte blocks. 1 in 100 items stores 2 1Kb
 chunks and 1 in 200 items stores 1 32kb chunk.
 
 Items are also linked randomly with an average chain length of ~ 1.3.
+
+Each allocated work item is modified by computing and writing C byte
+values to the allocated byte blocks, cycling round to the start of the
+block if necessary. So, by increasing C you can vary the allocation to
+computation ratio.
+
+The current msec time is measured after every S work item allocate &
+compute operations i.e. this parameter groups a fixed number of work
+item operations as a standard task whose time is measured repeatedly
+over the run. Differences between sucessive timings are recorded as a
+per task execution time. These timings will be fairly consistent
+*except* where GC pauses thread execution.
+
+By configuring S and C you can ensure that the sample interval is no
+greater than a few milliseconds (by dfeault it will probably be much
+less than this). Variation in the readings will be displayed in the
+output histograms (per thread and accumulated across threads)
+providing an indication of how often and how long new gen and old gen
+GCs have interrupted execution of tasks.
+
+If you are running with a lot more mutator threads than cores you may
+want to simulate yields or pauses during task execution using the
+-yields parameter (running with no pauses and a low compute time
+merely serves to thrash the memory system). If Y is 0 then a thread
+yields at the end of each slice. If Y is > 0 then it sleeps for Y
+msecs. Note that yield and sleep times are not included in the next
+task's time measurement.
+
