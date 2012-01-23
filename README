@@ -82,7 +82,8 @@ that the thread will purge all its entries from the global work set,
 simulating an application phase change.
 
 Items normally hold B 32 byte blocks. 1 in 100 items stores 2 1Kb
-chunks and 1 in 200 items stores 1 32kb chunk.
+blocks and 1 in 200 items stores 1 32kb block. 1 in 1000 items holds
+a single 1Mb block.
 
 Items are also linked randomly with an average chain length of ~ 1.3.
 
