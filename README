@@ -1,0 +1,54 @@
+You build the churn application using mvn package.
+
+There are scripts in the bin directory to run it with the various GCs
+available in Hotspot/OpenJDK
+
+  run-g1.sh
+  run-cms.sh
+  run-par.sh
+
+The scripts dump a suitably labelled gc log and output file showing
+the gc trace output and the program output e.g. if you execute
+run-g1.sh the fiels will be
+
+  gclog-g1
+  outlog-g1
+
+You can also run with the compressed oops optimization enabled using
+the follwoing scripts
+
+  run-g1-coops.sh
+  run-cms-coops.sh
+  run-par-coops.sh
+
+The arguments to the program (and the run scripts) are optional in
+which case the program uses suitable defaults
+
+  -blocks B [default 4] how many data blocks to allocate per work item
+  -items I [default 4] how many million local/global work items in the work set
+  -threads T [default 8] how many threads to use to do the processing
+  -iterations N [default 200]how many times to update the local/gobal work set
+
+where B, I, T and N need to be supplied as positive integers.
+
+The program repeatedly updates a local (i.e. short lived) work set by
+allocating and inserting work items. So, this work set is continually
+being updated and most of the items are dropped with only a short life
+time.
+
+1 in 10 work items are also inserted into the global (long lived) work
+set at create time. These items therefore tend to have a lifetime 10x
+> than the normal lifetime.
+
+The local and global work sets are each divided into T chunks updated
+independently by each of the T threads. Each thread updates its work
+set N times.
+
+Each time a complete chunk is updated there is a 1 in 100 chance that
+the thread will purge all its entries from the global work set,
+simulating an application phase change.
+
+Items normally hold B 32 byte blocks. 1 in 100 items stores 2 1Kb
+chunks and 1 in 200 items stores 1 32kb chunk.
+
+Items are also linked randomly with an average chain length of ~ 1.3.
