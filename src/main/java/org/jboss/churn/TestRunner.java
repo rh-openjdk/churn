@@ -14,7 +14,7 @@
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public
+ * You should have received a copy of the GNU Lesser General Pu102blic
  * License along with this software; if not, write to the Free
  * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
  * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
@@ -97,10 +97,11 @@ public class TestRunner extends Thread
     private static int threadCount = 8;
 
     /**
-     * total number of work items (measured in millions) to hold in all per thread maps and also
-     * the number of times to be held in the long term map. can be reset on command line using -items
+     * total number of work items (measured in thousands) to hold in all per thread maps and also
+     * the number of times to be held in the long term map. can be reset on command line using
+     * -items
      */
-    private static int itemTotalMillions = 4;
+    private static int itemTotalThousands = 4 * 1000;
 
     /**
      * number of map passes done be each thread during which it wil update its short term map and
@@ -134,9 +135,9 @@ public class TestRunner extends Thread
     private static int yieldMSecCount = -1;
 
     /**
-     * actual number of items held i.e. the same as itemTotalMillions scaled by 1024 * 1024
+     * actual number of items held i.e. the same as itemTotalThousands scaled by 1000
      */
-    private static int itemTotal = itemTotalMillions * 1024 * 1024;
+    private static int itemTotal = itemTotalThousands * 1000;
 
     /**
      * number of items to be processed by any given worker. n.b. this potentially ignores
@@ -153,8 +154,8 @@ public class TestRunner extends Thread
     /**
      * main method allowing test to be run. command line options are as follows:
      * <ul>
-     *     <li>-blocks B -- number of 256 byte blocks allocated per work item (default 4)</li>
-     *     <li>-items I -- total number of work items to retain in map / (1024 * 1024) (default 4)</li>
+     *     <li>-blocks B -- number of 32 byte blocks allocated per work item (default 4)</li>
+     *     <li>-items I -- total number of work items to retain in map / (1000) (default 4000)</li>
      *     <li>-threads T -- number of worker threads to run in parallel (default 8)</li>
      *     <li>-iterations N -- number of passes over map either replacing or promoting entries (defaults to 200)</li>
      *     <li>-computations C -- number of compute/write operations to each work items data block (defaults to 32)</li>
@@ -231,8 +232,8 @@ public class TestRunner extends Thread
                     }
                 } else if (args[i].equals("-items") && i + 1 < args.length) {
                     i++;
-                    itemTotalMillions = Integer.valueOf(args[i]);
-                    if (itemTotalMillions <= 0 || itemTotalMillions > 64) {
+                    itemTotalThousands = Integer.valueOf(args[i]);
+                    if (itemTotalThousands <= 100 || itemTotalThousands > 20000) {
                         usage(3, args[i]);
                     }
                 } else if (args[i].equals("-threads") && i + 1 < args.length) {
@@ -281,7 +282,7 @@ public class TestRunner extends Thread
 
         // recompute derived data
 
-        itemTotal = itemTotalMillions * 1024 * 1024;
+        itemTotal = itemTotalThousands * 1000;
         itemCount =  itemTotal / threadCount;
 
     }
@@ -415,16 +416,16 @@ public class TestRunner extends Thread
             }
 
             // we want to purge the map every now and then so we dump a whole load of old data
-            // for new data. n.b. we scale the odds by itemTotalMillions so that we purge after
+            // for new data. n.b. we scale the odds by itemTotalThousands so that we purge after
             // this thread has allocated a fixed amount rather than every time round the loop
-            // (the amount allocated every time round the loop is proportional to itemTotalMillions)
+            // (the amount allocated every time round the loop is proportional to itemTotalThousands)
 
-            if (random.nextInt(DUMP_LONG_TERM_ODDS) <= itemTotalMillions) {
+            if (random.nextInt(DUMP_LONG_TERM_ODDS) <= itemTotalThousands) {
                 // System.out.println(id + " : (" + iteration + ") purge[" + itemStart + "->" + (itemStart + itemCount - 1) + "]");
                 longTermMap = new WorkItemMap();
             }
 
-            //System.out.println("thread " + id + " : loop " + (iteration + 1));
+            // System.out.println("thread " + id + " : loop " + (iteration + 1));
         }
 
         System.out.println("thread " + id + " : end");
