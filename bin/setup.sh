@@ -26,7 +26,13 @@
 # and then exec run.sh
 #
 # set up heap size, gc print opts and default gc log file
-export HEAP_OPTS="-Xms15g -Xmx15g"
+if [ -z "$HEAPSIZE" ]; then
+    echo "setting heap size to 15g"
+    HEAPSIZE=15g
+else
+    echo "heap size is $HEAPSIZE"
+fi
+export HEAP_OPTS="-Xms$HEAPSIZE -Xmx$HEAPSIZE"
 export GC_PRINT_OPTS="-XX:+PrintGCTimeStamps -XX:+PrintGCDetails -XX:+PrintGCApplicationStoppedTime -XX:+PrintGCApplicationConcurrentTime -verbose:gc"
 export OUT_LOG_FILE="outlog"
 export GC_LOG_FILE="gclog"
