@@ -206,7 +206,7 @@ public class TestRunner extends Thread
         System.out.println("Elapsed time " + (((end - start) * 1.0) / 1000) + " seconds for " + threadCount + " threads");
         System.out.println();
         if (threadCount > 1) {
-            LogHistogram total = new LogHistogram(true, 4);
+            LogHistogram total = new LogHistogram(true, 10);
             for (int i= 0; i < threadCount; i++) {
                 LogHistogram next = runners[i].getHistogram();
                 total.accumulate(next);
@@ -327,7 +327,7 @@ public class TestRunner extends Thread
         this.longTermMap = new WorkItemMap();
         this.shortTermMap = new WorkItemMap();
         this.itemStart = id * itemCount;
-        this.logHistogram = new LogHistogram(true, 4);
+        this.logHistogram = new LogHistogram(true, 10);
     }
 
     public void run()
@@ -390,8 +390,12 @@ public class TestRunner extends Thread
         long currentTime = System.currentTimeMillis();
 
         for (int iteration = 0; iteration < iterationCount; iteration++) {
+            // across each 10 successive iterations we bias item block sizes from
+            // 50% to 150% of the nominal size, making it all the more likely we run
+            // into mature space fragmentation issues
+            int sizeBias = 6 + (iteration % 10);
             for (int i = 0; i < itemCount; i++) {
-                doOneItem(random, i);
+                doOneItem(random, i, sizeBias);
                 // increment the slicecounter and see if we need to collect a timing
                 slice = (slice + 1) % sliceCount;
                 if (slice == 0) {
@@ -437,8 +441,10 @@ public class TestRunner extends Thread
      * @param random a source of random values
      * @param i an offset from the threads item start index identifying both the short term and long term
      * work item which may need to be modified.
+     * @param bias a value between 6 and 15 used to scale the size of the data blocks hung off this
+     * item from 50% to 140% of the nominal size
      */
-    private void doOneItem(Random random, int i) {
+    private void doOneItem(Random random, int i, int bias) {
         int idx = itemStart + i;
         String name = "item " + idx;
         WorkItem item = shortTermMap.get(name);
@@ -464,18 +470,18 @@ public class TestRunner extends Thread
         int size_randomizer = random.nextInt(MEGA_LARGE_OBJECT_ODDS);
         if (size_randomizer == 0) {
             // ok, create a 1 Mb object
-            item = new WorkItem(name, 1, 1024 * 1024);
+            item = new WorkItem(name, 1, 1024 * 1024 * bias / 10);
         } else {
             size_randomizer = random.nextInt(LARGE_OBJECT_ODDS);
             if (size_randomizer == 0) {
                 // one very large object 32K
-                item = new WorkItem(name, 1, 32 * 1024);
+                item = new WorkItem(name, 1, 32 * 1024  * bias / 10);
             } else if (size_randomizer < 4) {
                 // 2 medium objects 2K each
-                item = new WorkItem(name, 2, 1024);
+                item = new WorkItem(name, 2, 1024 * bias / 10);
             } else {
                 // N small objects about 32 bytes each
-                item = new WorkItem(name, blockCount, 32);
+                item = new WorkItem(name, blockCount, 32 * bias / 10);
             }
         }
         if (random.nextInt(LINK_ODDS) == 0) {
