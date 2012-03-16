@@ -24,6 +24,9 @@
 
 package org.jboss.churn;
 
+import java.lang.management.ManagementFactory;
+import java.lang.management.MemoryMXBean;
+import java.lang.management.MemoryUsage;
 import java.util.Random;
 
 /**
@@ -51,6 +54,26 @@ public class TestRunner extends Thread
      * variations in the timings can be used to identify GC perturbations.
      */
     private LogHistogram logHistogram;
+
+    /**
+     * count of the number of bytes allocated by this thread when processing work items
+     */
+    private long allocationCount;
+
+    /**
+     * cost in bytes for allocating a new work item map
+     */
+    public static int workItemMapCost = 0;
+
+    /**
+     * cost in bytes for inserting or updating an item in a work map
+     */
+    public static int workItemInsertCost = 0;
+
+    /**
+     * cost in bytes for allocating a new work item
+     */
+    public static int workItemCost = 0;
 
     /**
      * the start index for the range of keys used by this thread to label work items
@@ -186,6 +209,11 @@ public class TestRunner extends Thread
     {
         processArgs(args);
 
+        /**
+         * identify costs for allocating various objects
+         */
+        calibrate();
+
         TestRunner[] runners = new TestRunner[threadCount];
         for (int i = 0; i < threadCount; i++) {
             runners[i] = new TestRunner(i);
@@ -205,17 +233,24 @@ public class TestRunner extends Thread
         long end = System.currentTimeMillis();
         System.out.println("Elapsed time " + (((end - start) * 1.0) / 1000) + " seconds for " + threadCount + " threads");
         System.out.println();
+        long allocated = 0;
         if (threadCount > 1) {
             LogHistogram total = new LogHistogram(true, 10);
             for (int i= 0; i < threadCount; i++) {
                 LogHistogram next = runners[i].getHistogram();
                 total.accumulate(next);
+                long threadAllocated = runners[i].getAllocationCount();
+                allocated += threadAllocated;
+                System.out.println("Thread Allocated" + threadAllocated / (1024 * 1024) + " MBs");
                 System.out.println("Thread " + i + " Histogram");
                 next.printTo(System.out);
             }
+            System.out.println("Total Allocated" + allocated / (1024 * 1024) + " MBs");
             System.out.println("Accumulated Histogram");
             total.printTo(System.out);
         } else {
+            allocated += runners[0].getAllocationCount();
+            System.out.println("Total Allocated" + allocated / (1024 * 1024) + " MBs");
             System.out.println("Accumulated Histogram");
             runners[0].getHistogram().printTo(System.out);
         }
@@ -287,6 +322,83 @@ public class TestRunner extends Thread
 
     }
 
+    /**
+     * identify sizings for the various objects we will allocate during the test run
+     */
+    private static void calibrate() {
+        System.out.println("calibrating");
+        MemoryMXBean mxbean = ManagementFactory.getMemoryMXBean();
+        MemoryUsage memoryUsage = mxbean.getHeapMemoryUsage();
+        long estimatedHeapMB = (int) (memoryUsage.getMax() / (1024 * 1024));
+        int objectCount = 10000;
+        Object[] handle = new Object[objectCount];
+
+        // estimate size of WorkItemMap
+        System.gc();
+        long initialUsage = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getUsed();
+        for (int i = 0; i < objectCount; i++) {
+            handle[i] = new WorkItemMap();
+        }
+        long bytesUsed = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getUsed() - initialUsage;
+
+        workItemMapCost = (int)(bytesUsed/objectCount);
+
+        for (int i = 0; i < objectCount; i++) {
+            handle[i] = null;
+        }
+
+        // compute cost of adding an item to the map
+        WorkItemMap map = new WorkItemMap();
+        String name = "item 0";
+        WorkItem item = new WorkItem(name, 0, 0);
+
+        System.gc();
+
+        initialUsage = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getUsed();
+        for (int i = 0; i < objectCount; i++) {
+            name = "item " + i;
+            map.put(name, item);
+        }
+        bytesUsed = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getUsed() - initialUsage;
+
+        workItemInsertCost = (int)(bytesUsed/objectCount);
+
+        // compute size of WorkItem
+
+
+        initialUsage = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getUsed();
+        for (int i = 0; i < objectCount; i++) {
+            handle[i] = new WorkItem(name, 0, 0);
+        }
+        bytesUsed = ManagementFactory.getMemoryMXBean().getHeapMemoryUsage().getUsed() - initialUsage;
+
+        workItemCost = (int)(bytesUsed/objectCount);
+    }
+
+    /**
+     * count allocation overhead for adding a new item map
+     */
+    private void countMapAllocate()
+    {
+        allocationCount += workItemMapCost;
+    }
+
+    /**
+     * count allocation overhead for adding an item to an item map or updating an item entry
+     */
+    private void countItemInsert()
+    {
+        allocationCount += workItemInsertCost;
+    }
+
+    /**
+     * count allocation overhead for allocating this item
+     */
+    private void countItemAllocate(WorkItem item)
+    {
+        allocationCount += workItemCost + (item.getBlockCount() * item.getBlockSize());
+    }
+
     private static void usage(int i, String extra) {
         switch(i) {
             case 1:
@@ -328,6 +440,7 @@ public class TestRunner extends Thread
         this.shortTermMap = new WorkItemMap();
         this.itemStart = id * itemCount;
         this.logHistogram = new LogHistogram(true, 10);
+        this.allocationCount = 0;
     }
 
     public void run()
@@ -427,6 +540,7 @@ public class TestRunner extends Thread
             if (random.nextInt(DUMP_LONG_TERM_ODDS) <= itemTotalThousands) {
                 // System.out.println(id + " : (" + iteration + ") purge[" + itemStart + "->" + (itemStart + itemCount - 1) + "]");
                 longTermMap = new WorkItemMap();
+                countMapAllocate();
             }
 
             // System.out.println("thread " + id + " : loop " + (iteration + 1));
@@ -452,6 +566,7 @@ public class TestRunner extends Thread
         // we also promote it at random but with a skew for certain elements to vary their lifetime
         if (longTermMap.get(name) == null) {
             longTermMap.put(name, item);
+            countMapAllocate();
         } else {
             // we increase the multiplier for a specific 1 in 8 items so they tend to live longer
             int multiplier = ((i & 7) == 0 ? 10 : 1);
@@ -462,6 +577,8 @@ public class TestRunner extends Thread
             if (randomValue <= cutoff) {
                 // promote this item into the long term map -- deleting any existing entry
                 longTermMap.put(name, item);
+                // TODO hmm, assumes replace cost same as add cost!
+                countMapAllocate();
             }
         }
         // now create a new version of this item and maybe link it into a chain
@@ -484,6 +601,7 @@ public class TestRunner extends Thread
                 item = new WorkItem(name, blockCount, 32 * bias / 10);
             }
         }
+        countItemAllocate(item);
         if (random.nextInt(LINK_ODDS) == 0) {
             int linkIdx = itemStart + random.nextInt(itemCount);
             String linkName = "item " + linkIdx;
@@ -493,10 +611,17 @@ public class TestRunner extends Thread
         shortTermMap.put(name, item);
 
         item.doWork(i, computationCount);
+        // TODO hmm, assumes replace cost same as add cost!
+        countMapAllocate();
     }
 
     public LogHistogram getHistogram()
     {
         return logHistogram;
+    }
+
+    public long getAllocationCount()
+    {
+        return allocationCount;
     }
 }

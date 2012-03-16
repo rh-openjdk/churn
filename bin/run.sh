@@ -87,4 +87,4 @@ exec java ${HEAP_OPTS} \
     ${GC_PRINT_OPTS} \
     ${GC_SPECIFIC_OPTS} \
     -Xloggc:${GC_LOG_FILE} \
-    -cp target/classes org.jboss.churn.TestRunner $ARGS | tee ${OUT_LOG_FILE}
+    -cp target/classes org.jboss.churn.TestRunner $ARGS > ${OUT_LOG_FILE} 2>&1

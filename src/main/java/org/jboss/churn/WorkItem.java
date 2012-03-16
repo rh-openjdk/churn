@@ -64,6 +64,16 @@ public class WorkItem
         return data[i];
     }
 
+    public int getBlockCount()
+    {
+        return data.length;
+    }
+
+    public int getBlockSize()
+    {
+        return (data.length > 0 ? data[0].length : 0);
+    }
+
     void refer(WorkItem item)
     {
         reference = item;
