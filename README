@@ -12,6 +12,7 @@ available in Hotspot/OpenJDK
   run-g1.sh
   run-cms.sh
   run-par.sh
+  run-shenandoah.sh
 
 The scripts dump a suitably labelled gc log and output file showing
 the gc trace output and the program output e.g. if you execute
@@ -23,9 +24,10 @@ run-g1.sh the fiels will be
 You can also run with the compressed oops optimization enabled using
 the following scripts
 
-  run-g1-coops.sh
-  run-cms-coops.sh
-  run-par-coops.sh
+  run-g1-nocoops.sh
+  run-cms-nocoops.sh
+  run-par-nocoops.sh
+  run-shenandoah-nocoops.sh
 
 Arguments
 ---------
