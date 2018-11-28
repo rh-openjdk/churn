@@ -82,7 +82,7 @@ if [ $# -gt 0 ]; then
     echo "invalid arguments $*"
 fi
  
-exec java ${HEAP_OPTS} \
+exec ${JAVA} ${HEAP_OPTS} \
     ${COOPS_OPTS} \
     ${GC_PRINT_OPTS} \
     ${GC_SPECIFIC_OPTS} \

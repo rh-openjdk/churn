@@ -24,7 +24,20 @@
 # set up basic options needed for all runs
 # combine this with other scripts to complete setup
 # and then exec run.sh
-#
+
+# set up java
+if [ "x$JAVA_HOME" != "x" ]; then
+    export JAVA=${JAVA_HOME}/bin/java
+    echo "use java from JAVA_HOME [${JAVA}]"
+elif [ $( which java ) ]; then
+    export JAVA=$( which java )
+    echo "use java from PATH [${JAVA}]"
+else
+    echo "no java found!"
+    exit 1
+fi
+${JAVA} -version
+
 # set up heap size, gc print opts and default gc log file
 if [ -z "$HEAPSIZE" ]; then
     echo "setting heap size to 15g"
