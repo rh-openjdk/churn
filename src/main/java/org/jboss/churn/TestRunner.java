@@ -128,9 +128,17 @@ public class TestRunner extends Thread
 
     /**
      * number of map passes done be each thread during which it wil update its short term map and
-     * possibly promote items to the long term map. can be reset on command line using -iterations
+     * possibly promote items to the long term map. can be reset on command line using -iterations.
+     * disabled when 'duration' is set
      */
     private static int iterationCount = 200;
+
+    /**
+     * how long should churn run in seconds. the resulting time might differ as current iteration
+     * is to be finished, but new iteration after the 'duration' won't be started.
+     * disabled by default. when set to some positive value, it overwrites 'iterationCount'.
+     */
+    private static int duration = 0;
 
     /**
      * number of computations performed per allocation. this is used to slow down the allocation
@@ -289,6 +297,12 @@ public class TestRunner extends Thread
                     if (iterationCount <= 0) {
                         usage(5, args[i]);
                     }
+                } else if (args[i].equals("-duration")) {
+                    i++;
+                    duration = Integer.valueOf(args[i]);
+                    if (duration <= 0) {
+                        usage(10, args[i]);
+                    }
                 } else if (args[i].equals("-computations") && i + 1 < args.length) {
                     i++;
                     computationCount = Integer.valueOf(args[i]);
@@ -428,8 +442,11 @@ public class TestRunner extends Thread
             case 9:
                 System.out.println("invalid argument " + extra);
                 break;
+            case 10:
+                System.out.println("invalid duration count " + extra);
+                break;
         }
-        System.out.println("usage TestRunner [-blocks B] [-items I] [-threads T] [-iterations N] [-computations C] [-slices S] [-yieldMSecs Y");
+        System.out.println("usage TestRunner [-blocks B] [-items I] [-threads T] [-iterations N | -duration D] [-computations C] [-slices S] [-yieldMSecs Y");
         System.exit(i);
     }
 
@@ -502,11 +519,13 @@ public class TestRunner extends Thread
         int slice = 0;
         long currentTime = System.currentTimeMillis();
 
-        for (int iteration = 0; iteration < iterationCount; iteration++) {
+        LoopCondition loopCond = createLoopCondition();
+        int iterationCounter;
+        for (iterationCounter = 0; loopCond.check(iterationCounter); iterationCounter++) {
             // across each 10 successive iterations we bias item block sizes from
             // 50% to 150% of the nominal size, making it all the more likely we run
             // into mature space fragmentation issues
-            int sizeBias = 6 + (iteration % 10);
+            int sizeBias = 6 + (iterationCounter % 10);
             for (int i = 0; i < itemCount; i++) {
                 doOneItem(random, i, sizeBias);
                 // increment the slicecounter and see if we need to collect a timing
@@ -545,8 +564,21 @@ public class TestRunner extends Thread
 
             // System.out.println("thread " + id + " : loop " + (iteration + 1));
         }
-
+        System.out.println("thread " + id + " : done [" + iterationCounter + "] iterations");
         System.out.println("thread " + id + " : end");
+    }
+
+    private LoopCondition createLoopCondition() {
+        final long startTime = System.currentTimeMillis();
+        // if duration is set, use that
+        if (duration > 0) {
+            return counter -> {
+                long currentDuration = System.currentTimeMillis() - startTime;
+                return currentDuration / 1000 <= duration;
+            };
+        } else {
+            return iteration -> iteration < iterationCount;
+        }
     }
 
     /**
@@ -623,5 +655,9 @@ public class TestRunner extends Thread
     public long getAllocationCount()
     {
         return allocationCount;
+    }
+
+    private interface LoopCondition {
+        boolean check(int counter);
     }
 }
