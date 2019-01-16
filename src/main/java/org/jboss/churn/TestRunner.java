@@ -572,12 +572,20 @@ public class TestRunner extends Thread
         final long startTime = System.currentTimeMillis();
         // if duration is set, use that
         if (duration > 0) {
-            return counter -> {
-                long currentDuration = System.currentTimeMillis() - startTime;
-                return currentDuration / 1000 <= duration;
+            return new LoopCondition() {
+                @Override
+                public boolean check(int counter) {
+                    long currentDuration = System.currentTimeMillis() - startTime;
+                    return currentDuration / 1000 <= duration;
+                }
             };
         } else {
-            return iteration -> iteration < iterationCount;
+            return new LoopCondition() {
+                @Override
+                public boolean check(int iteration) {
+                    return iteration < iterationCount;
+                }
+            };
         }
     }
 
