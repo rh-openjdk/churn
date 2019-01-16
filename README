@@ -39,13 +39,14 @@ which case the program uses suitable defaults
   -items I [default 4] how many million local/global work items in the work set
   -threads T [default 8] how many threads to use to do the processing
   -iterations N [default 200] how many times to update the local/gobal work set
+  -duration D [default off] how long in seconds should churn run. overwrites -iterations
   -computations C [default 32] how many computes/write operations are
    performed on each allocated object 
   -slices S [default 100] number of allocate/compute operations per timed task
   -yield Y [default -1] yield (Y = 0) or sleep (for Y msecs) at end of slice
   
 
-where B, I, T, N, C and S need to be supplied as positive integers
+where B, I, T, N, D, C and S need to be supplied as positive integers
 and Y may be 0 or a positive.
 
 Output
@@ -77,7 +78,9 @@ load or data set size.
 Each thread loops repeating updates to the work set N times. So, the
 total number of allocations and insertions into the local work set
 accumulated across all threads is (I * N) million and each thread
-creates (I / T) * N items.
+creates (I / T) * N items. Alternatively, when D is provided, new
+iterations are started, with same rules mentioned, until running
+time exceeds D seconds.
 
 Each time a chunk of I / T items is updated there is a 1 in 100 chance
 that the thread will purge all its entries from the global work set,

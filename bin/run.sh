@@ -54,6 +54,12 @@ do
 	    GC_LOG_FILE=${GC_LOG_FILE}-n$1
 	    OUT_LOG_FILE=${OUT_LOG_FILE}-n$1
 	    shift;;
+    -duration)
+	    ARGS="$ARGS $1 $2"
+            shift
+	    GC_LOG_FILE=${GC_LOG_FILE}-d$1
+	    OUT_LOG_FILE=${OUT_LOG_FILE}-d$1
+	    shift;;
 	-computations)
 	    ARGS="$ARGS $1 $2"
             shift
