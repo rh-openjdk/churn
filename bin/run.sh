@@ -87,10 +87,9 @@ done
 if [ $# -gt 0 ]; then
     echo "invalid arguments $*"
 fi
- 
 exec ${JAVA} ${HEAP_OPTS} \
     ${COOPS_OPTS} \
     ${GC_PRINT_OPTS} \
     ${GC_SPECIFIC_OPTS} \
-    -Xloggc:${GC_LOG_FILE} \
+    $( eval echo ${LOG_OPTS} ) \
     -cp target/classes org.jboss.churn.TestRunner $ARGS > ${OUT_LOG_FILE} 2>&1
