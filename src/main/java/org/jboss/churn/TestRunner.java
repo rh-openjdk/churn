@@ -124,7 +124,7 @@ public class TestRunner extends Thread
      * the number of times to be held in the long term map. can be reset on command line using
      * -items
      */
-    private static int itemTotalThousands = 4 * 1000;
+    private static int itemTotal = 4 * 1000000;
 
     /**
      * number of map passes done be each thread during which it wil update its short term map and
@@ -164,11 +164,6 @@ public class TestRunner extends Thread
      * number of milliseconds. can be set on the commandline using -yieldMSecs
      */
     private static int yieldMSecCount = -1;
-
-    /**
-     * actual number of items held i.e. the same as itemTotalThousands scaled by 1000
-     */
-    private static int itemTotal = itemTotalThousands * 1000;
 
     /**
      * number of items to be processed by any given worker. n.b. this potentially ignores
@@ -275,10 +270,7 @@ public class TestRunner extends Thread
                     }
                 } else if (args[i].equals("-items") && i + 1 < args.length) {
                     i++;
-                    itemTotalThousands = Integer.valueOf(args[i]);
-                    if (itemTotalThousands <= 100 || itemTotalThousands > 20000) {
-                        usage(3, args[i]);
-                    }
+                    itemTotal = Integer.valueOf(args[i]);
                 } else if (args[i].equals("-threads") && i + 1 < args.length) {
                     i++;
                     threadCount = Integer.valueOf(args[i]);
@@ -331,7 +323,6 @@ public class TestRunner extends Thread
 
         // recompute derived data
 
-        itemTotal = itemTotalThousands * 1000;
         itemCount =  itemTotal / threadCount;
 
     }
@@ -552,11 +543,11 @@ public class TestRunner extends Thread
             }
 
             // we want to purge the map every now and then so we dump a whole load of old data
-            // for new data. n.b. we scale the odds by itemTotalThousands so that we purge after
+            // for new data. n.b. we scale the odds by itemTotal thousands so that we purge after
             // this thread has allocated a fixed amount rather than every time round the loop
             // (the amount allocated every time round the loop is proportional to itemTotalThousands)
 
-            if (random.nextInt(DUMP_LONG_TERM_ODDS) <= itemTotalThousands) {
+            if (random.nextInt(DUMP_LONG_TERM_ODDS) <= itemTotal / 1000) {
                 // System.out.println(id + " : (" + iteration + ") purge[" + itemStart + "->" + (itemStart + itemCount - 1) + "]");
                 longTermMap = new WorkItemMap();
                 countMapAllocate();
