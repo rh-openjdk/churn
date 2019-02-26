@@ -36,7 +36,7 @@ The arguments to the program (and the run scripts) are optional in
 which case the program uses suitable defaults
 
   -blocks B [default 4] how many data blocks to allocate per work item
-  -items I [default 4] how many million local/global work items in the work set
+  -items I [default 4000] how many thousand local/global work items in the work set
   -threads T [default 8] how many threads to use to do the processing
   -iterations N [default 200] how many times to update the local/gobal work set
   -duration D [default off] how long in seconds should churn run. overwrites -iterations

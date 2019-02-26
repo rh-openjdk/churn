@@ -276,7 +276,7 @@ public class TestRunner extends Thread
                 } else if (args[i].equals("-items") && i + 1 < args.length) {
                     i++;
                     itemTotalThousands = Integer.valueOf(args[i]);
-                    if (itemTotalThousands <= 100 || itemTotalThousands > 20000) {
+                    if (itemTotalThousands <= 0 || itemTotalThousands > Integer.MAX_VALUE / 1000) {
                         usage(3, args[i]);
                     }
                 } else if (args[i].equals("-threads") && i + 1 < args.length) {
