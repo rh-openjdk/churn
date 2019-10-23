@@ -25,6 +25,6 @@
 #
 # set up GC_SPECIFIC_OPTS for Shenandoah collector
 # and append Shenandoah tag to gc log file name
-export GC_SPECIFIC_OPTS="-XX:+UseShenandoahGC"
+export GC_SPECIFIC_OPTS="-XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC"
 export GC_LOG_FILE="${GC_LOG_FILE}-shenandoah"
 export OUT_LOG_FILE="${OUT_LOG_FILE}-shenandoah"
