@@ -22,6 +22,7 @@
 #
 # @authors Andrew Dinn
 #
+
 if [ ! -z "${COOPS_OPTS}" ]; then
     GC_LOG_FILE=${GC_LOG_FILE}-nocoops
     OUT_LOG_FILE=${OUT_LOG_FILE}-nocoops
@@ -92,4 +93,5 @@ exec ${JAVA} ${HEAP_OPTS} \
     ${GC_PRINT_OPTS} \
     ${GC_SPECIFIC_OPTS} \
     $( eval echo ${LOG_OPTS} ) \
-    -cp target/classes org.jboss.churn.TestRunner $ARGS > ${OUT_LOG_FILE} 2>&1
+    -cp target/classes org.jboss.churn.TestRunner $ARGS 2>&1 | tee ${OUT_LOG_FILE}
+
