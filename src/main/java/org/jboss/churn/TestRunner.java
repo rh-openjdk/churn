@@ -262,6 +262,7 @@ public class TestRunner extends Thread
             System.out.println("Accumulated Histogram");
             runners[0].getHistogram().printTo(System.out);
         }
+        System.out.println("Successfully finished");
     }
 
     private static void processArgs(String[] args) {
