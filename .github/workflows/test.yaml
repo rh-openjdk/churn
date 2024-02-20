@@ -39,6 +39,10 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: ${{ matrix.jdkver || env.jdk_latest }}
+      - name: Set up Maven
+        uses: stCarolas/setup-maven@v5
+        with:
+          maven-version: 3.8.2
       - name: Build
         run: mvn clean install
 
@@ -70,13 +74,20 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: ${{ matrix.jdkver || env.jdk_latest }}
+      - name: Set up Maven
+        uses: stCarolas/setup-maven@v5
+        with:
+          maven-version: 3.8.2
       - uses: msys2/setup-msys2@v2
         with:
           update: true
           install: make
-      - name: Build
-        shell: msys2 {0}
+      - name: Build win
+        shell: cmd
         run: mvn clean install
+      - name: run msys
+        shell: msys2 {0}
+        run: pwd && ls -l
 
   test-macos:
     name: "MacOS"
@@ -106,5 +117,9 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: ${{ matrix.jdkver || env.jdk_latest }}
+      - name: Set up Maven
+        uses: stCarolas/setup-maven@v5
+        with:
+          maven-version: 3.8.2
       - name: Run
         run: mvn clean install
