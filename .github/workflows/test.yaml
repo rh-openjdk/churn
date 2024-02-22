@@ -166,9 +166,9 @@ jobs:
       - name: Build
         run: mvn clean install
       - name: test all
-        run: OTOOL_JDK_VERSION=8 DURATION=239 OTOOL_garbageCollector=ALL STAMP=true bash run.sh
+        run: OTOOL_JDK_VERSION=7 DURATION=239 OTOOL_garbageCollector=ALL STAMP=true bash run.sh
       - name: test all nocoops
-        run: OTOOL_JDK_VERSION=8 NOCOMP=-nocoops DURATION=239 OTOOL_garbageCollector=ALL STAMP=true bash run.sh
+        run: OTOOL_JDK_VERSION=7 NOCOMP=-nocoops DURATION=239 OTOOL_garbageCollector=ALL STAMP=true bash run.sh
       - name: Upload results
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
@@ -206,10 +206,10 @@ jobs:
         run: mvn clean install
       - name: test all
         shell: msys2 {0}
-        run: OTOOL_JDK_VERSION=8 DURATION=239 OTOOL_garbageCollector=ALL STAMP=true bash run.sh
+        run: OTOOL_JDK_VERSION=7 DURATION=239 OTOOL_garbageCollector=ALL STAMP=true bash run.sh
       - name: test all nocoops
         shell: msys2 {0}
-        run: OTOOL_JDK_VERSION=8 NOCOMP=-nocoops DURATION=239 OTOOL_garbageCollector=ALL STAMP=true bash run.sh
+        run: OTOOL_JDK_VERSION=7 NOCOMP=-nocoops DURATION=239 OTOOL_garbageCollector=ALL STAMP=true bash run.sh
       - name: Upload results
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
@@ -241,9 +241,9 @@ jobs:
       - name: Run
         run: mvn clean install
       - name: test all
-        run: OTOOL_JDK_VERSION=8 DURATION=239 OTOOL_garbageCollector=ALL STAMP=true bash run.sh
+        run: OTOOL_JDK_VERSION=7 DURATION=239 OTOOL_garbageCollector=ALL STAMP=true bash run.sh
       - name: test all nocoops
-        run: OTOOL_JDK_VERSION=8 NOCOMP=-nocoops DURATION=239 OTOOL_garbageCollector=ALL STAMP=true bash run.sh
+        run: OTOOL_JDK_VERSION=7 NOCOMP=-nocoops DURATION=239 OTOOL_garbageCollector=ALL STAMP=true bash run.sh
       - name: Upload results
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
