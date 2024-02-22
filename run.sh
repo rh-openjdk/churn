@@ -28,8 +28,10 @@ if [ "x$GC" == "x" ] ; then
   elif [ "x$OTOOL_garbageCollector" == "xALL" ] ; then
 	if [ "0$OTOOL_JDK_VERSION" -gt 8 -o "x$OTOOL_JDK_VERSION" == "x" ] ; then
       GC="shenandoah zgc cms par g1"
-	else
+	elif [ "0$OTOOL_JDK_VERSION" -eq 8 ] ; then
       GC="shenandoah     cms  par g1"
+    else
+      GC="               cms  par g1"
     fi
   elif [ "x$OTOOL_garbageCollector" == "xdefaultgc" ] ; then
     if [ "0$OTOOL_JDK_VERSION" -le 8 ] ; then
@@ -112,7 +114,7 @@ pushd ${CH_SCRIPT_DIR}
   for gc in $GC; do
      echo "*** $gc ***"
     one_result=0
-	HEAPSIZE=${HEAPSIZE} bash -x bin/run${gc}${NOCOMP}.sh -items ${ITEMS} -threads ${THREADS} -duration ${DURATION} -blocks ${BLOCKS} -computations ${COMPUTATIONS} || one_result=1
+	HEAPSIZE=${HEAPSIZE} bash -ex bin/run${gc}${NOCOMP}.sh -items ${ITEMS} -threads ${THREADS} -duration ${DURATION} -blocks ${BLOCKS} -computations ${COMPUTATIONS} || one_result=1
     let TEST_RESULT=$TEST_RESULT+$one_result || true
     results="$results
 $gc=$one_result"
