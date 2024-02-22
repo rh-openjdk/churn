@@ -46,6 +46,12 @@ if [ "x$GC" == "x" ] ; then
   exit 1
 fi
 
+if [ ! "x$STAMP"  == "x" ] ; then
+  arch=`uname -m | sed "s/[^a-zA-Z0-9_]//g"`
+  os=`uname -o | sed "s/[^a-zA-Z0-9_]//g"`
+  time=`date +%s`
+  STAMP="-${os}_${arch}_${time}"
+fi
 # churn parameters sane defaults
 if [ "x$HEAPSIZE"  == "x" ] ; then
   HEAPSIZE=3g
@@ -64,7 +70,6 @@ if [ "x$OTOOL_garbageCollector" == "xALL" ] ; then
   let "DURATION=$DURATION/$gcs"
   echo "all GCs will run. Time per one is: $DURATION"
 fi
-
 if [ "x$COMPUTATIONS"  == "x" ] ; then
   COMPUTATIONS=64
 fi
@@ -80,8 +85,28 @@ if [ ! -e ${CH_SCRIPT_DIR}/target ] ; then
   popd
 fi
 
+function globalInfo() {
+  uname -a > outlog-global
+  if [ "x$LJAVA_HOME" != "x" ]; then
+      export LJAVA=${JAVA_HOME}/bin/java
+      echo "use java from JAVA_HOME [${LJAVA}]"
+  elif [ $( which java ) ]; then
+      export LJAVA=$( which java )
+      echo "use java from PATH [${LJAVA}]"
+  else
+      echo "no java found!"
+      exit 1
+  fi
+  ${LJAVA} -version 2>>outlog-global
+  echo "NOCOMP=${NOCOMP}">>outlog-global
+  echo "GC=${GC}">>outlog-global
+  echo "OTOOL_garbageCollector=${OTOOL_garbageCollector}">>outlog-global
+  echo "OTOOL_JDK_VERSION=${OTOOL_JDK_VERSION}">>outlog-global
+}
+
 results=""
 pushd ${CH_SCRIPT_DIR}
+  globalInfo
   TEST_RESULT=0
   echo $GC
   for gc in $GC; do
@@ -96,9 +121,9 @@ $gc=$one_result"
   #the test results (gclog*) wont be there if it fails for some reason
   gclogsCount=`ls gclog* | wc -l`
   if [ 0$gclogsCount -gt  0 ] ; then
-    tar -cvzf gclogs${NOCOMP}.tar.gz outlog-* gclog-*
+    tar -cvzf gclogs${NOCOMP}${STAMP}.tar.gz outlog-* gclog-*
   else
-    tar -cvzf gclogs${NOCOMP}.tar.gz outlog-*
+    tar -cvzf gclogs${NOCOMP}${STAMP}.tar.gz outlog-*
   fi
 popd
 if [ `readlink -f ${CH_SCRIPT_DIR}` == `pwd`  ] ; then
@@ -107,12 +132,11 @@ if [ `readlink -f ${CH_SCRIPT_DIR}` == `pwd`  ] ; then
   else  
     rm  ${CH_SCRIPT_DIR}/outlog-*
   fi
-	
 else
   if [ 0$gclogsCount -gt  0 ] ; then
-    mv  ${CH_SCRIPT_DIR}/gclogs.tar.gz ${CH_SCRIPT_DIR}/outlog* ${CH_SCRIPT_DIR}/gclog-*  .
+    mv  ${CH_SCRIPT_DIR}/gclogs${NOCOMP}${STAMP}.tar.gz ${CH_SCRIPT_DIR}/outlog-* ${CH_SCRIPT_DIR}/gclog-*  .
   else	
-    mv ${CH_SCRIPT_DIR}/gclogs.tar.gz ${CH_SCRIPT_DIR}/outlog-* .
+    mv ${CH_SCRIPT_DIR}/gclogs${NOCOMP}${STAMP}.tar.gz ${CH_SCRIPT_DIR}/outlog-* .
   fi
 fi
 echo "$results"
