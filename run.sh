@@ -28,7 +28,11 @@ if [ "x$GC" == "x" ] ; then
   elif [ "x$OTOOL_garbageCollector" == "xg1" ] ; then
     GC=g1
   elif [ "x$OTOOL_garbageCollector" == "xALL" ] ; then
-    GC="shenandoah zgc cms par g1"
+	if [ "0$OTOOL_JDK_VERSION" -gt 8 -o "x$OTOOL_JDK_VERSION" == "x" ] ; then
+      GC="shenandoah zgc cms par g1"
+	else
+      GC="shenandoah     cms  par g1"
+    fi
   elif [ "x$OTOOL_garbageCollector" == "xdefaultgc" ] ; then
     if [ "0$OTOOL_JDK_VERSION" -le 8 ] ; then
       GC=par
@@ -40,7 +44,7 @@ fi
 
 echo "GC=$GC"  >&2
 if [ "x$GC" == "x" ] ; then
-  echo 'expected exactly one command line argument - garbage collector [g1|cms|par|shenandoah] or use OTOOL_garbageCollector variabnle with same values + two more - "defaultgc" and "ALL", wich will cause this to use default gc or iterate through all GCs (time will be divided)' >&2
+  echo 'expected exactly one command line argument - garbage collector [g1|cms|par|shenandoah] or use OTOOL_garbageCollector variabnle with same values + two more - "defaultgc" and "ALL", wich will cause this to use default gc or iterate through all GCs (time will be divided). Use NOCOMP=-nocoops to disable compressed oops.' >&2  
   exit 1
 fi
 
@@ -85,7 +89,7 @@ pushd ${CH_SCRIPT_DIR}
   for gc in $GC; do
      echo "*** $gc ***"
     one_result=0
-    HEAPSIZE=${HEAPSIZE} sh  -ex bin/run${gc}.sh -items ${ITEMS} -threads ${THREADS} -duration ${DURATION} -blocks ${BLOCKS} -computations ${COMPUTATIONS} || one_result=$?
+	HEAPSIZE=${HEAPSIZE} sh  -x bin/run${gc}${NOCOMP}.sh -items ${ITEMS} -threads ${THREADS} -duration ${DURATION} -blocks ${BLOCKS} -computations ${COMPUTATIONS} || one_result=1
     let TEST_RESULT=$TEST_RESULT+$one_result || true
     results="$results
 $gc=$one_result"
@@ -94,15 +98,24 @@ $gc=$one_result"
   #the test results (gclog*) wont be there if it fails for some reason
   gclogsCount=`ls gclog* | wc -l`
   if [ 0$gclogsCount -gt  0 ] ; then
-    tar -cvzf gclogs.tar.gz outlog-* gclog-*
+    tar -cvzf gclogs${NOCOMP}.tar.gz outlog-* gclog-*
   else
-    tar -cvzf gclogs.tar.gz outlog-*
+    tar -cvzf gclogs${NOCOMP}.tar.gz outlog-*
   fi
 popd
-if [ 0$gclogsCount -gt  0 ] ; then
-  mv  ${CH_SCRIPT_DIR}/gclogs.tar.gz ${CH_SCRIPT_DIR}/outlog* ${CH_SCRIPT_DIR}/gclog-*  .
-else	
-  mv ${CH_SCRIPT_DIR}/gclogs.tar.gz ${CH_SCRIPT_DIR}/outlog-* .
+if [ `readlink -f ${CH_SCRIPT_DIR}` == `pwd`  ] ; then
+  if [ 0$gclogsCount -gt  0 ] ; then
+    rm  ${CH_SCRIPT_DIR}/outlog* ${CH_SCRIPT_DIR}/gclog-* 
+  else  
+    rm  ${CH_SCRIPT_DIR}/outlog-*
+  fi
+	
+else
+  if [ 0$gclogsCount -gt  0 ] ; then
+    mv  ${CH_SCRIPT_DIR}/gclogs.tar.gz ${CH_SCRIPT_DIR}/outlog* ${CH_SCRIPT_DIR}/gclog-*  .
+  else	
+    mv ${CH_SCRIPT_DIR}/gclogs.tar.gz ${CH_SCRIPT_DIR}/outlog-* .
+  fi
 fi
 echo "$results"
 exit $TEST_RESULT
