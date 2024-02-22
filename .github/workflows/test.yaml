@@ -46,6 +46,11 @@ jobs:
         run: DURATION=20 OTOOL_garbageCollector=ALL bash run.sh
       - name: test all nocoops
         run: NOCOMP=-nocoops DURATION=20 OTOOL_garbageCollector=ALL bash run.sh
+      - name: Upload results
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v3
+        with:
+          path: "*.tar.gz"
 
   test-win:
     name: "Windows"
@@ -89,6 +94,11 @@ jobs:
       - name: test all nocoops
         shell: msys2 {0}
         run: NOCOMP=-nocoops DURATION=20 OTOOL_garbageCollector=ALL bash run.sh
+      - name: Upload results
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v3
+        with:
+          path: "*.tar.gz"
 
   test-macos:
     name: "MacOS"
@@ -125,3 +135,8 @@ jobs:
         run: DURATION=20 OTOOL_garbageCollector=ALL bash run.sh
       - name: test all nocoops
         run: NOCOMP=-nocoops DURATION=20 OTOOL_garbageCollector=ALL bash run.sh
+      - name: Upload results
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v3
+        with:
+          path: "*.tar.gz"
