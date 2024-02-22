@@ -88,14 +88,14 @@ fi
 function globalInfo() {
   uname -a > outlog-global
   if [ "x$LJAVA_HOME" != "x" ]; then
-      export LJAVA=${JAVA_HOME}/bin/java
+      LJAVA=${JAVA_HOME}/bin/java
       echo "use java from JAVA_HOME [${LJAVA}]"
   elif [ $( which java ) ]; then
-      export LJAVA=$( which java )
+      LJAVA=$( which java )
       echo "use java from PATH [${LJAVA}]"
   else
       echo "no java found!"
-      exit 1
+      LJAVA=java
   fi
   ${LJAVA} -version 2>>outlog-global
   echo "NOCOMP=${NOCOMP}">>outlog-global
