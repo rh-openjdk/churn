@@ -43,9 +43,9 @@ jobs:
       - name: Build
         run: mvn clean install
       - name: test all
-        run: DURATION=20 OTOOL_garbageCollector=ALL bash run.sh
+        run: DURATION=20 OTOOL_garbageCollector=ALL STAMP=true bash run.sh
       - name: test all nocoops
-        run: NOCOMP=-nocoops DURATION=20 OTOOL_garbageCollector=ALL bash run.sh
+        run: NOCOMP=-nocoops DURATION=20 OTOOL_garbageCollector=ALL STAMP=true  bash run.sh
       - name: Upload results
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
@@ -135,6 +135,115 @@ jobs:
         run: DURATION=20 OTOOL_garbageCollector=ALL STAMP=true bash run.sh
       - name: test all nocoops
         run: NOCOMP=-nocoops DURATION=20 OTOOL_garbageCollector=ALL STAMP=true bash run.sh
+      - name: Upload results
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v3
+        with:
+          path: "*.tar.gz"
+
+  test-linux-jdk8:
+    name: "Linux"
+    runs-on: "ubuntu-latest"
+    strategy:
+      fail-fast: false
+      matrix:
+        jdkconf:
+          - JDK 8
+        include:
+          - jdkconf: JDK 8
+            jdkver: "8"
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: ${{ matrix.jdkver || env.jdk_latest }}
+      - name: Set up Maven
+        uses: stCarolas/setup-maven@v5
+        with:
+          maven-version: 3.8.2
+      - name: Build
+        run: mvn clean install
+      - name: test all
+        run: OTOOL_JDK_VERSION=8 DURATION=20 OTOOL_garbageCollector=ALL STAMP=true bash run.sh
+      - name: test all nocoops
+        run: OTOOL_JDK_VERSION=8 NOCOMP=-nocoops DURATION=20 OTOOL_garbageCollector=ALL STAMP=true bash run.sh
+      - name: Upload results
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v3
+        with:
+          path: "*.tar.gz"
+
+  test-win-jdk8:
+    name: "Windows"
+    runs-on: "windows-latest"
+    strategy:
+      fail-fast: false
+      matrix:
+        jdkconf:
+          - JDK 8
+        include:
+          - jdkconf: JDK 8
+            jdkver: "8"
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: ${{ matrix.jdkver || env.jdk_latest }}
+      - name: Set up Maven
+        uses: stCarolas/setup-maven@v5
+        with:
+          maven-version: 3.8.2
+      - uses: msys2/setup-msys2@v2
+        with:
+          update: true
+          install: make
+      - name: Build win
+        shell: cmd
+        run: mvn clean install
+      - name: test all
+        shell: msys2 {0}
+        run: OTOOL_JDK_VERSION=8 DURATION=20 OTOOL_garbageCollector=ALL STAMP=true bash run.sh
+      - name: test all nocoops
+        shell: msys2 {0}
+        run: OTOOL_JDK_VERSION=8 NOCOMP=-nocoops DURATION=20 OTOOL_garbageCollector=ALL STAMP=true bash run.sh
+      - name: Upload results
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v3
+        with:
+          path: "*.tar.gz"
+
+  test-macos-jdk8:
+    name: "MacOS"
+    runs-on: "macos-latest"
+    strategy:
+      fail-fast: false
+      matrix:
+        jdkconf:
+          - JDK 8
+        include:
+          - jdkconf: JDK 8
+            jdkver: "8"
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: ${{ matrix.jdkver || env.jdk_latest }}
+      - name: Set up Maven
+        uses: stCarolas/setup-maven@v5
+        with:
+          maven-version: 3.8.2
+      - name: Run
+        run: mvn clean install
+      - name: test all
+        run: OTOOL_JDK_VERSION=8 DURATION=20 OTOOL_garbageCollector=ALL STAMP=true bash run.sh
+      - name: test all nocoops
+        run: OTOOL_JDK_VERSION=8 NOCOMP=-nocoops DURATION=20 OTOOL_garbageCollector=ALL STAMP=true bash run.sh
       - name: Upload results
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
