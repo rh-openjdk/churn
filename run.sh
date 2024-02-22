@@ -112,7 +112,7 @@ pushd ${CH_SCRIPT_DIR}
   for gc in $GC; do
      echo "*** $gc ***"
     one_result=0
-	HEAPSIZE=${HEAPSIZE} sh  -x bin/run${gc}${NOCOMP}.sh -items ${ITEMS} -threads ${THREADS} -duration ${DURATION} -blocks ${BLOCKS} -computations ${COMPUTATIONS} || one_result=1
+	HEAPSIZE=${HEAPSIZE} bash -x bin/run${gc}${NOCOMP}.sh -items ${ITEMS} -threads ${THREADS} -duration ${DURATION} -blocks ${BLOCKS} -computations ${COMPUTATIONS} || one_result=1
     let TEST_RESULT=$TEST_RESULT+$one_result || true
     results="$results
 $gc=$one_result"
