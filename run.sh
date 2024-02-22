@@ -9,8 +9,6 @@ done
 readonly CH_SCRIPT_DIR="$( cd -P "$( dirname "$SCRIPT_SOURCE" )" && pwd )"
 set -ex
 
-
-
 GC=${1}
 if [ "x$GC" == "x" ] ; then
   #todo add generational zgc since jdk21, todo add generational shenandoah sicnce  jdk23?

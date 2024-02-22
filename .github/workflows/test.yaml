@@ -18,14 +18,11 @@ jobs:
       fail-fast: false
       matrix:
         jdkconf:
-          - JDK 8
           - JDK 11
           - JDK 17
           - JDK 21
           - JDK Latest
         include:
-          - jdkconf: JDK 8
-            jdkver: "8"
           - jdkconf: JDK 11
             jdkver: "11"
           - jdkconf: JDK 17
@@ -45,6 +42,10 @@ jobs:
           maven-version: 3.8.2
       - name: Build
         run: mvn clean install
+      - name: test all
+        run: DURATION=20 OTOOL_garbageCollector=ALL sh run.sh
+      - name: test all nocoops
+        run: NOCOMP=-nocoops DURATION=20 OTOOL_garbageCollector=ALL sh run.sh
 
   test-win:
     name: "Windows"
@@ -53,14 +54,11 @@ jobs:
       fail-fast: false
       matrix:
         jdkconf:
-          - JDK 8
           - JDK 11
           - JDK 17
           - JDK 21
           - JDK Latest
         include:
-          - jdkconf: JDK 8
-            jdkver: "8"
           - jdkconf: JDK 11
             jdkver: "11"
           - jdkconf: JDK 17
@@ -85,9 +83,12 @@ jobs:
       - name: Build win
         shell: cmd
         run: mvn clean install
-      - name: run msys
+      - name: test all
         shell: msys2 {0}
-        run: pwd && ls -l
+        run: DURATION=20 OTOOL_garbageCollector=ALL sh run.sh
+      - name: test all nocoops
+        shell: msys2 {0}
+        run: NOCOMP=-nocoops DURATION=20 OTOOL_garbageCollector=ALL sh run.sh
 
   test-macos:
     name: "MacOS"
@@ -96,14 +97,11 @@ jobs:
       fail-fast: false
       matrix:
         jdkconf:
-          - JDK 8
           - JDK 11
           - JDK 17
           - JDK 21
           - JDK Latest
         include:
-          - jdkconf: JDK 8
-            jdkver: "8"
           - jdkconf: JDK 11
             jdkver: "11"
           - jdkconf: JDK 17
@@ -123,3 +121,7 @@ jobs:
           maven-version: 3.8.2
       - name: Run
         run: mvn clean install
+      - name: test all
+        run: DURATION=20 OTOOL_garbageCollector=ALL sh run.sh
+      - name: test all nocoops
+        run: NOCOMP=-nocoops DURATION=20 OTOOL_garbageCollector=ALL sh run.sh
