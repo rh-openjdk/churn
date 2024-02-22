@@ -97,7 +97,7 @@ function globalInfo() {
       echo "no java found!"
       LJAVA=java
   fi
-  ${LJAVA} -version 2>>outlog-global
+  ${LJAVA} -version 2>>outlog-global || true
   echo "NOCOMP=${NOCOMP}">>outlog-global
   echo "GC=${GC}">>outlog-global
   echo "OTOOL_garbageCollector=${OTOOL_garbageCollector}">>outlog-global
