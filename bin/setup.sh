@@ -36,6 +36,8 @@ else
     echo "no java found!"
     exit 1
 fi
+#${JAVA} -version
+#${JAVA} -XX:+PrintFlagsFinal
 ${JAVA} -version
 
 # set up heap size, gc print opts and default gc log file
@@ -48,7 +50,6 @@ fi
 export HEAP_OPTS="-Xms$HEAPSIZE -Xmx$HEAPSIZE"
 export OUT_LOG_FILE="outlog"
 export GC_LOG_FILE="gclog"
-
 
 # detect java version <= 8 and >= 9 because of changes introduced by JEP 158 (http://openjdk.java.net/jeps/158)
 # java <= 8 has just `java -version`, java >= 9 has also `java --version`

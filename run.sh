@@ -26,12 +26,17 @@ if [ "x$GC" == "x" ] ; then
   elif [ "x$OTOOL_garbageCollector" == "xg1" ] ; then
     GC=g1
   elif [ "x$OTOOL_garbageCollector" == "xALL" ] ; then
-	if [ "0$OTOOL_JDK_VERSION" -gt 8 -o "x$OTOOL_JDK_VERSION" == "x" ] ; then
-      GC="shenandoah zgc cms par g1"
-	elif [ "0$OTOOL_JDK_VERSION" -eq 8 ] ; then
-      GC="shenandoah     cms  par g1"
+	if [ "x$OTOOL_JDK_VERSION" == "x" ] ; then
+      GC="shenandoah zgc cms par g1" ## unset, main set set
+    elif [ "0$OTOOL_JDK_VERSION" -le 7  ] ; then
+      GC="               cms  par g1" ## we claim adoptium jdk8 as 7, as it do not have shenandoah.
+  	elif [ "0$OTOOL_JDK_VERSION" -ge 8  -a "0$OTOOL_JDK_VERSION" -lt 11 ] ; then
+      GC="shenandoah     cms  par g1" # zgc arrived in jdk11
+	elif [ "0$OTOOL_JDK_VERSION" -ge 11  -a "0$OTOOL_JDK_VERSION" -le 20 ] ; then
+      GC="shenandoah zgc          g1" # no more cms or par
     else
-      GC="               cms  par g1"
+     # in jdk 21 arrived generational zgc
+     GC="shenandoah zgc           g1 zgcgen" # zgcgem arrived in jdk21
     fi
   elif [ "x$OTOOL_garbageCollector" == "xdefaultgc" ] ; then
     if [ "0$OTOOL_JDK_VERSION" -le 8 ] ; then

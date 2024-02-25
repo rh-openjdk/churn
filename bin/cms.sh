@@ -25,6 +25,12 @@
 #
 # set up GC_SPECIFIC_OPTS for CMS collector
 # and append cms tag to gc log file name
-export GC_SPECIFIC_OPTS="-XX:+UseConcMarkSweepGC -XX:PrintCMSStatistics=1 -XX:+PrintCMSInitiationStatistics"
+if [[ ${JV} != 0 ]]; then
+  # jdk <= 8
+  export GC_SPECIFIC_OPTS="-XX:+UseConcMarkSweepGC -XX:PrintCMSStatistics=1 -XX:+PrintCMSInitiationStatistics"
+else
+  # jdk >= 9
+  export GC_SPECIFIC_OPTS="-XX:+UseConcMarkSweepGC"
+fi
 export GC_LOG_FILE="${GC_LOG_FILE}-cms"
 export OUT_LOG_FILE="${OUT_LOG_FILE}-cms"
