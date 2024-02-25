@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # JBoss, Home of Professional Open Source
 # Copyright 2018, Red Hat and individual contributors
