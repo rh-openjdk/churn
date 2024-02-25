@@ -53,8 +53,8 @@ export GC_LOG_FILE="gclog"
 # detect java version <= 8 and >= 9 because of changes introduced by JEP 158 (http://openjdk.java.net/jeps/158)
 # java <= 8 has just `java -version`, java >= 9 has also `java --version`
 # final GC_LOG_FILE is not known at the moment. We're going to eval $GC_LOG_FILE later in run.sh script
-${JAVA} --version &> /dev/null
-JV=$?
+JV=0
+${JAVA} --version &> /dev/null || JV=$?
 if [[ ${JV} != 0 ]]; then
     # jdk <= 8
     export GC_PRINT_OPTS="-XX:+PrintGCTimeStamps -XX:+PrintGCDetails -XX:+PrintGCApplicationStoppedTime -XX:+PrintGCApplicationConcurrentTime -verbose:gc"
