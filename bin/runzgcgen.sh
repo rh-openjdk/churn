@@ -24,5 +24,5 @@
 #
 WD=`dirname $0`
 . $WD/setup.sh
-. $WD/shenandoah.sh
+. $WD/zgcgen.sh
 exec $WD/run.sh $*

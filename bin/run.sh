@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # JBoss, Home of Professional Open Source
 # Copyright 2011, Red Hat and individual contributors
@@ -88,6 +88,8 @@ done
 if [ $# -gt 0 ]; then
     echo "invalid arguments $*"
 fi
+
+set -o pipefail # without pipefail, the below command will always return zero!
 exec ${JAVA} ${HEAP_OPTS} \
     ${COOPS_OPTS} \
     ${GC_PRINT_OPTS} \

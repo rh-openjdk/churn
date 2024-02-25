@@ -24,5 +24,6 @@
 #
 WD=`dirname $0`
 . $WD/setup.sh
-. $WD/shenandoah.sh
+. $WD/zgcgen.sh
+. $WD/nocoops.sh
 exec $WD/run.sh $*

@@ -1,4 +1,3 @@
-#!/bin/bash
 #
 # JBoss, Home of Professional Open Source
 # Copyright 2018, Red Hat and individual contributors
@@ -22,7 +21,10 @@
 #
 # @authors Michal Vala
 #
-WD=`dirname $0`
-. $WD/setup.sh
-. $WD/shenandoah.sh
-exec $WD/run.sh $*
+# setup script to configure Shenandoah gc
+#
+# set up GC_SPECIFIC_OPTS for Shenandoah collector
+# and append Shenandoah tag to gc log file name
+export GC_SPECIFIC_OPTS="-XX:+UnlockExperimentalVMOptions -XX:+UseZGC -XX:+ZGenerational"
+export GC_LOG_FILE="${GC_LOG_FILE}-zgcgen"
+export OUT_LOG_FILE="${OUT_LOG_FILE}-zgcgen"
