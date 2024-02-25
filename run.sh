@@ -156,7 +156,7 @@ popd
     printXmlFooter >> churn.jtr.xml
     rm -v $jtrXml
     set -e
-    tar -cvzf churn.jtr.xml.tar.gz churn.jtr.xml
+    tar -cvzf churn${NOCOMP}${STAMP}.jtr.xml.tar.gz churn.jtr.xml
     rm churn.jtr.xml
   fi
 ) || true
@@ -173,8 +173,8 @@ else
   else	
     mv-v ${CH_SCRIPT_DIR}/gclogs${NOCOMP}${STAMP}.tar.gz ${CH_SCRIPT_DIR}/outlog-* .
   fi
-  if [ -e ${CH_SCRIPT_DIR}/churn.jtr.xml.gz ] ; then
-    mv -v ${CH_SCRIPT_DIR}/churn.jtr.xml.gz .
+  if [ -e ${CH_SCRIPT_DIR}/churn${NOCOMP}${STAMP}.jtr.xml.gz ] ; then
+    mv -v ${CH_SCRIPT_DIR}/churn${NOCOMP}${STAMP}.jtr.xml.gz .
   fi
 fi
 
