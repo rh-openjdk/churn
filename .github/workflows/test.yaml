@@ -9,7 +9,9 @@ on:
       - "*"
 env:
   jdk_latest: 21
-
+###############
+#### jdk21
+###############
 jobs:
   test-linux:
     name: "Linux"
@@ -18,15 +20,9 @@ jobs:
       fail-fast: false
       matrix:
         jdkconf:
-          - JDK 11
-          - JDK 17
           - JDK 21
           - JDK Latest
         include:
-          - jdkconf: JDK 11
-            jdkver: "11"
-          - jdkconf: JDK 17
-            jdkver: "17"
           - jdkconf: JDK 21
             jdkver: "21"
     steps:
@@ -43,9 +39,9 @@ jobs:
       - name: Build
         run: mvn clean install
       - name: test all
-        run: DURATION=239 OTOOL_garbageCollector=ALL STAMP=true bash run.sh
+        run: OTOOL_JDK_VERSION=21 DURATION=239 OTOOL_garbageCollector=ALL STAMP=true bash run.sh
       - name: test all nocoops
-        run: NOCOMP=-nocoops DURATION=239 OTOOL_garbageCollector=ALL STAMP=true  bash run.sh
+        run: OTOOL_JDK_VERSION=21 NOCOMP=-nocoops DURATION=239 OTOOL_garbageCollector=ALL STAMP=true  bash run.sh
       - name: Upload results
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
@@ -59,15 +55,9 @@ jobs:
       fail-fast: false
       matrix:
         jdkconf:
-          - JDK 11
-          - JDK 17
           - JDK 21
           - JDK Latest
         include:
-          - jdkconf: JDK 11
-            jdkver: "11"
-          - jdkconf: JDK 17
-            jdkver: "17"
           - jdkconf: JDK 21
             jdkver: "21"
     steps:
@@ -90,10 +80,10 @@ jobs:
         run: mvn clean install
       - name: test all
         shell: msys2 {0}
-        run: DURATION=239 OTOOL_garbageCollector=ALL STAMP=true bash run.sh
+        run: OTOOL_JDK_VERSION=21 DURATION=239 OTOOL_garbageCollector=ALL STAMP=true bash run.sh
       - name: test all nocoops
         shell: msys2 {0}
-        run: NOCOMP=-nocoops DURATION=239 OTOOL_garbageCollector=ALL STAMP=true bash run.sh
+        run: OTOOL_JDK_VERSION=21 NOCOMP=-nocoops DURATION=239 OTOOL_garbageCollector=ALL STAMP=true bash run.sh
       - name: Upload results
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
@@ -107,15 +97,9 @@ jobs:
       fail-fast: false
       matrix:
         jdkconf:
-          - JDK 11
-          - JDK 17
           - JDK 21
           - JDK Latest
         include:
-          - jdkconf: JDK 11
-            jdkver: "11"
-          - jdkconf: JDK 17
-            jdkver: "17"
           - jdkconf: JDK 21
             jdkver: "21"
     steps:
@@ -132,15 +116,20 @@ jobs:
       - name: Run
         run: mvn clean install
       - name: test all
-        run: DURATION=239 OTOOL_garbageCollector=ALL STAMP=true bash run.sh
+        run: OTOOL_JDK_VERSION=21 DURATION=239 OTOOL_garbageCollector=ALL STAMP=true bash run.sh
       - name: test all nocoops
-        run: NOCOMP=-nocoops DURATION=239 OTOOL_garbageCollector=ALL STAMP=true bash run.sh
+        run: OTOOL_JDK_VERSION=21 NOCOMP=-nocoops DURATION=239 OTOOL_garbageCollector=ALL STAMP=true bash run.sh
       - name: Upload results
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
         with:
           path: "*.tar.gz"
-
+###############
+#### jdk21 end
+###############
+###############
+#### jdk8
+###############
   test-linux-jdk8:
     name: "Linux"
     runs-on: "ubuntu-latest"
@@ -249,3 +238,234 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           path: "*.tar.gz"
+###############
+#### jdk8  end
+###############
+###############
+#### jdk11
+###############
+  test-linux-jdk11:
+    name: "Linux"
+    runs-on: "ubuntu-latest"
+    strategy:
+      fail-fast: false
+      matrix:
+        jdkconf:
+          - JDK 11
+        include:
+          - jdkconf: JDK 11
+            jdkver: "11"
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: ${{ matrix.jdkver || env.jdk_latest }}
+      - name: Set up Maven
+        uses: stCarolas/setup-maven@v5
+        with:
+          maven-version: 3.8.2
+      - name: Build
+        run: mvn clean install
+      - name: test all
+        run: OTOOL_JDK_VERSION=11 DURATION=239 OTOOL_garbageCollector=ALL STAMP=true bash run.sh
+      - name: test all nocoops
+        run: OTOOL_JDK_VERSION=11 NOCOMP=-nocoops DURATION=239 OTOOL_garbageCollector=ALL STAMP=true bash run.sh
+      - name: Upload results
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v3
+        with:
+          path: "*.tar.gz"
+
+  test-win-jdk11:
+    name: "Windows"
+    runs-on: "windows-latest"
+    strategy:
+      fail-fast: false
+      matrix:
+        jdkconf:
+          - JDK 11
+        include:
+          - jdkconf: JDK 11
+            jdkver: "11"
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: ${{ matrix.jdkver || env.jdk_latest }}
+      - name: Set up Maven
+        uses: stCarolas/setup-maven@v5
+        with:
+          maven-version: 3.8.2
+      - uses: msys2/setup-msys2@v2
+        with:
+          update: true
+          install: make
+      - name: Build win
+        shell: cmd
+        run: mvn clean install
+      - name: test all
+        shell: msys2 {0}
+        run: OTOOL_JDK_VERSION=11 DURATION=239 OTOOL_garbageCollector=ALL STAMP=true bash run.sh
+      - name: test all nocoops
+        shell: msys2 {0}
+        run: OTOOL_JDK_VERSION=11 NOCOMP=-nocoops DURATION=239 OTOOL_garbageCollector=ALL STAMP=true bash run.sh
+      - name: Upload results
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v3
+        with:
+          path: "*.tar.gz"
+
+  test-macos-jdk11:
+    name: "MacOS"
+    runs-on: "macos-latest"
+    strategy:
+      fail-fast: false
+      matrix:
+        jdkconf:
+          - JDK 11
+        include:
+          - jdkconf: JDK 11
+            jdkver: "11"
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: ${{ matrix.jdkver || env.jdk_latest }}
+      - name: Set up Maven
+        uses: stCarolas/setup-maven@v5
+        with:
+          maven-version: 3.8.2
+      - name: Run
+        run: mvn clean install
+      - name: test all
+        run: OTOOL_JDK_VERSION=11 DURATION=239 OTOOL_garbageCollector=ALL STAMP=true bash run.sh
+      - name: test all nocoops
+        run: OTOOL_JDK_VERSION=11 NOCOMP=-nocoops DURATION=239 OTOOL_garbageCollector=ALL STAMP=true bash run.sh
+      - name: Upload results
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v3
+        with:
+          path: "*.tar.gz"
+###############
+#### jdk11 end
+###############
+###############
+#### jdk17
+###############
+  test-linux-jdk17:
+    name: "Linux"
+    runs-on: "ubuntu-latest"
+    strategy:
+      fail-fast: false
+      matrix:
+        jdkconf:
+          - JDK 17
+        include:
+          - jdkconf: JDK 17
+            jdkver: "17"
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: ${{ matrix.jdkver || env.jdk_latest }}
+      - name: Set up Maven
+        uses: stCarolas/setup-maven@v5
+        with:
+          maven-version: 3.8.2
+      - name: Build
+        run: mvn clean install
+      - name: test all
+        run: OTOOL_JDK_VERSION=17 DURATION=239 OTOOL_garbageCollector=ALL STAMP=true bash run.sh
+      - name: test all nocoops
+        run: OTOOL_JDK_VERSION=17 NOCOMP=-nocoops DURATION=239 OTOOL_garbageCollector=ALL STAMP=true bash run.sh
+      - name: Upload results
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v3
+        with:
+          path: "*.tar.gz"
+
+  test-win-jdk17:
+    name: "Windows"
+    runs-on: "windows-latest"
+    strategy:
+      fail-fast: false
+      matrix:
+        jdkconf:
+          - JDK 17
+        include:
+          - jdkconf: JDK 17
+            jdkver: "17"
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: ${{ matrix.jdkver || env.jdk_latest }}
+      - name: Set up Maven
+        uses: stCarolas/setup-maven@v5
+        with:
+          maven-version: 3.8.2
+      - uses: msys2/setup-msys2@v2
+        with:
+          update: true
+          install: make
+      - name: Build win
+        shell: cmd
+        run: mvn clean install
+      - name: test all
+        shell: msys2 {0}
+        run: OTOOL_JDK_VERSION=17 DURATION=239 OTOOL_garbageCollector=ALL STAMP=true bash run.sh
+      - name: test all nocoops
+        shell: msys2 {0}
+        run: OTOOL_JDK_VERSION=17 NOCOMP=-nocoops DURATION=239 OTOOL_garbageCollector=ALL STAMP=true bash run.sh
+      - name: Upload results
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v3
+        with:
+          path: "*.tar.gz"
+
+  test-macos-jdk17:
+    name: "MacOS"
+    runs-on: "macos-latest"
+    strategy:
+      fail-fast: false
+      matrix:
+        jdkconf:
+          - JDK 17
+        include:
+          - jdkconf: JDK 17
+            jdkver: "17"
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up JDK
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'temurin'
+          java-version: ${{ matrix.jdkver || env.jdk_latest }}
+      - name: Set up Maven
+        uses: stCarolas/setup-maven@v5
+        with:
+          maven-version: 3.8.2
+      - name: Run
+        run: mvn clean install
+      - name: test all
+        run: OTOOL_JDK_VERSION=17 DURATION=239 OTOOL_garbageCollector=ALL STAMP=true bash run.sh
+      - name: test all nocoops
+        run: OTOOL_JDK_VERSION=17 NOCOMP=-nocoops DURATION=239 OTOOL_garbageCollector=ALL STAMP=true bash run.sh
+      - name: Upload results
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v3
+        with:
+          path: "*.tar.gz"
+###############
+#### jdk17 end
+###############
