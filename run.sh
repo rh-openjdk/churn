@@ -126,25 +126,57 @@ $gc=$one_result"
   done
 
   #the test results (gclog*) wont be there if it fails for some reason
-  gclogsCount=`ls gclog* | wc -l`
+  gclogsCount=`ls gclog-* | wc -l`
   if [ 0$gclogsCount -gt  0 ] ; then
     tar -cvzf gclogs${NOCOMP}${STAMP}.tar.gz outlog-* gclog-*
   else
     tar -cvzf gclogs${NOCOMP}${STAMP}.tar.gz outlog-*
   fi
 popd
+
+#optionally generate juit result file
+(
+  wget https://raw.githubusercontent.com/rh-openjdk/run-folder-as-tests/main/jtreg-shell-xml.sh;
+  jtrXml=`pwd`/jtreg-shell-xml.sh
+  if [ -e $jtrXml ] ; then
+    source  $jtrXml
+    total=`echo $results | wc -w `
+    pass=`echo "$results" | grep -e =0 | wc -l`
+    fail=`echo "$results" | grep -e =1 | wc -l`
+    printXmlHeader $pass $fail $total 0 churn `hostname` > churn.jtr.xml
+	  for result in $results ;  do
+      name=`echo $result | sed "s/=.*//"`
+      if echo $result | grep -e "=0" ; then
+        printXmlTest churn $name $DURATION >> churn.jtr.xml
+      else
+        fileName=`ls outlog-$name-*`
+        printXmlTest churn $name $DURATION $fileName "$fileName and gclog-$name-* in gclogs${NOCOMP}${STAMP}.tar.gz" >> churn.jtr.xml
+      fi
+    done
+    printXmlFooter >> churn.jtr.xml
+    rm -v $jtrXml
+    set -e
+    tar -cvzf churn.jtr.xml.tar.gz churn.jtr.xml
+    rm churn.jtr.xml
+  fi
+) || true
+
 if [ `readlink -f ${CH_SCRIPT_DIR}` == `pwd`  ] ; then
   if [ 0$gclogsCount -gt  0 ] ; then
-    rm  ${CH_SCRIPT_DIR}/outlog* ${CH_SCRIPT_DIR}/gclog-* 
+    rm -v ${CH_SCRIPT_DIR}/outlog* ${CH_SCRIPT_DIR}/gclog-* 
   else  
-    rm  ${CH_SCRIPT_DIR}/outlog-*
+    rm -v ${CH_SCRIPT_DIR}/outlog-*
   fi
 else
   if [ 0$gclogsCount -gt  0 ] ; then
-    mv  ${CH_SCRIPT_DIR}/gclogs${NOCOMP}${STAMP}.tar.gz ${CH_SCRIPT_DIR}/outlog-* ${CH_SCRIPT_DIR}/gclog-*  .
+    mv -v ${CH_SCRIPT_DIR}/gclogs${NOCOMP}${STAMP}.tar.gz ${CH_SCRIPT_DIR}/outlog-* ${CH_SCRIPT_DIR}/gclog-*  .
   else	
-    mv ${CH_SCRIPT_DIR}/gclogs${NOCOMP}${STAMP}.tar.gz ${CH_SCRIPT_DIR}/outlog-* .
+    mv-v ${CH_SCRIPT_DIR}/gclogs${NOCOMP}${STAMP}.tar.gz ${CH_SCRIPT_DIR}/outlog-* .
+  fi
+  if [ -e ${CH_SCRIPT_DIR}/churn.jtr.xml.gz ] ; then
+    mv -v ${CH_SCRIPT_DIR}/churn.jtr.xml.gz .
   fi
 fi
+
 echo "$results"
 exit $TEST_RESULT
