@@ -88,7 +88,7 @@ function ljava() {
   if [ "x$JAVA_HOME" != "x" ]; then
       LJAVA=${JAVA_HOME}/bin/java
       LJAR=${JAVA_HOME}/bin/jar
-      LJAVAC=${JAVA_HOME}/bin/java
+      LJAVAC=${JAVA_HOME}/bin/javac
       echo "use java from JAVA_HOME [${LJAVA}]"
       echo "use javac from JAVA_HOME [${LJAVAC}]"
   elif [ $( which java ) ]; then
