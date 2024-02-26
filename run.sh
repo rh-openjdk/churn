@@ -195,7 +195,7 @@ else
   if [ 0$gclogsCount -gt  0 ] ; then
     mv -v ${CH_SCRIPT_DIR}/gclogs${NOCOMP}${STAMP}.tar.gz ${CH_SCRIPT_DIR}/outlog-* ${CH_SCRIPT_DIR}/gclog-*  .
   else	
-    mv-v ${CH_SCRIPT_DIR}/gclogs${NOCOMP}${STAMP}.tar.gz ${CH_SCRIPT_DIR}/outlog-* .
+    mv -v ${CH_SCRIPT_DIR}/gclogs${NOCOMP}${STAMP}.tar.gz ${CH_SCRIPT_DIR}/outlog-* .
   fi
   if [ -e ${CH_SCRIPT_DIR}/churn${NOCOMP}${STAMP}.jtr.xml.gz ] ; then
     mv -v ${CH_SCRIPT_DIR}/churn${NOCOMP}${STAMP}.jtr.xml.gz .
