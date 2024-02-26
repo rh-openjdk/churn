@@ -83,27 +83,51 @@ fi
 if [ "x$BLOCKS"  == "x" ] ; then
   BLOCKS=16
 fi
-if [ ! -e ${CH_SCRIPT_DIR}/target ] ; then
-  if [ "x$MVOPTS"  == "x" ] ; then
-    MVOPTS="--batch-mode"
-  fi
-  pushd $CH_SCRIPT_DIR
-    mvn $MVOPTS install
-  popd
-fi
 
-function globalInfo() {
-  uname -a > outlog-global
+function ljava() {
   if [ "x$LJAVA_HOME" != "x" ]; then
       LJAVA=${JAVA_HOME}/bin/java
+      LJAR=${JAVA_HOME}/bin/jar
+      LJAVAC=${JAVA_HOME}/bin/java
       echo "use java from JAVA_HOME [${LJAVA}]"
+      echo "use javac from JAVA_HOME [${LJAVAC}]"
   elif [ $( which java ) ]; then
       LJAVA=$( which java )
+      LJAR=$( which jar )
+      LJAVAC=$( which javac )
       echo "use java from PATH [${LJAVA}]"
+      echo "use java from PATH [${LJAVAC}]"
   else
       echo "no java found!"
       LJAVA=java
+      LJAR=jar
+      LJAVAC=javac
   fi
+}
+
+if [ ! -e ${CH_SCRIPT_DIR}/target ] ; then
+  if which mvn ; then
+    if [ "x$MVOPTS"  == "x" ] ; then
+      MVOPTS="--batch-mode"
+    fi
+    pushd $CH_SCRIPT_DIR
+      mvn $MVOPTS install
+    popd
+  else
+    ljava
+    pushd $CH_SCRIPT_DIR/src/main/java/
+      ${LJAVAC} -d $CH_SCRIPT_DIR/target/classes `find . -type f | grep ".java$"`
+      pushd $CH_SCRIPT_DIR/target/classes
+        ${LJAR} -cf $CH_SCRIPT_DIR/target/churn-1.0.jar *
+      popd
+    popd
+  fi
+fi
+
+
+function globalInfo() {
+  uname -a > outlog-global
+  ljava
   ${LJAVA} -version 2>>outlog-global || true
   echo "NOCOMP=${NOCOMP}">>outlog-global
   echo "GC=${GC}">>outlog-global
@@ -143,21 +167,21 @@ popd
     total=`echo $results | wc -w `
     pass=`echo "$results" | grep -e =0 | wc -l`
     fail=`echo "$results" | grep -e =1 | wc -l`
-    printXmlHeader $pass $fail $total 0 churn `hostname` > churn.jtr.xml
+    printXmlHeader $pass $fail $total 0 churn${NOCOMP} `hostname` > churn${NOCOMP}.jtr.xml
 	  for result in $results ;  do
       name=`echo $result | sed "s/=.*//"`
       if echo $result | grep -e "=0" ; then
-        printXmlTest churn $name $DURATION >> churn.jtr.xml
+        printXmlTest churn $name $DURATION >> churn${NOCOMP}.jtr.xml
       else
         fileName=`ls outlog-$name-*`
-        printXmlTest churn $name $DURATION $fileName "$fileName and gclog-$name-* in gclogs${NOCOMP}${STAMP}.tar.gz" >> churn.jtr.xml
+        printXmlTest churn $name $DURATION $fileName "$fileName and gclog-$name-* in gclogs${NOCOMP}${STAMP}.tar.gz" >> churn${NOCOMP}.jtr.xml
       fi
     done
-    printXmlFooter >> churn.jtr.xml
+    printXmlFooter >> churn${NOCOMP}.jtr.xml
     rm -v $jtrXml
     set -e
-    tar -cvzf churn${NOCOMP}${STAMP}.jtr.xml.tar.gz churn.jtr.xml
-    rm churn.jtr.xml
+    tar -cvzf churn${NOCOMP}${STAMP}.jtr.xml.tar.gz churn${NOCOMP}.jtr.xml
+    rm churn${NOCOMP}.jtr.xml
   fi
 ) || true
 
