@@ -167,21 +167,21 @@ popd
     total=`echo $results | wc -w `
     pass=`echo "$results" | grep -e =0 | wc -l`
     fail=`echo "$results" | grep -e =1 | wc -l`
-    printXmlHeader $pass $fail $total 0 churn `hostname` > churn.jtr.xml
+    printXmlHeader $pass $fail $total 0 churn${NOCOMP} `hostname` > churn${NOCOMP}.jtr.xml
 	  for result in $results ;  do
       name=`echo $result | sed "s/=.*//"`
       if echo $result | grep -e "=0" ; then
-        printXmlTest churn $name $DURATION >> churn.jtr.xml
+        printXmlTest churn $name $DURATION >> churn${NOCOMP}.jtr.xml
       else
         fileName=`ls outlog-$name-*`
-        printXmlTest churn $name $DURATION $fileName "$fileName and gclog-$name-* in gclogs${NOCOMP}${STAMP}.tar.gz" >> churn.jtr.xml
+        printXmlTest churn $name $DURATION $fileName "$fileName and gclog-$name-* in gclogs${NOCOMP}${STAMP}.tar.gz" >> churn${NOCOMP}.jtr.xml
       fi
     done
-    printXmlFooter >> churn.jtr.xml
+    printXmlFooter >> churn${NOCOMP}.jtr.xml
     rm -v $jtrXml
     set -e
-    tar -cvzf churn${NOCOMP}${STAMP}.jtr.xml.tar.gz churn.jtr.xml
-    rm churn.jtr.xml
+    tar -cvzf churn${NOCOMP}${STAMP}.jtr.xml.tar.gz churn${NOCOMP}.jtr.xml
+    rm churn${NOCOMP}.jtr.xml
   fi
 ) || true
 
