@@ -43,6 +43,7 @@ Insted of via arguments, you may configure GC via variables: of OTOOL_garbageCol
 Where obviousy those needs OTOOL_JDK_VERSION set to 8,11...21 to properly determine default GC, or list of all GCs. The argument have priority over variable.
 The top level run.sh can generate junit-like xml at the end, and is compressing all the logs to single archive (they can be huge)
 Note, that if more then one gc is part of the  argument/OTOOL_garbageCollector final enumeration, the DURATION is split among them
+The top level run.sh is the only runner whcih can run from custom directory.
 
 Arguments
 ---------
