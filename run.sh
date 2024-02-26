@@ -85,7 +85,7 @@ if [ "x$BLOCKS"  == "x" ] ; then
 fi
 
 function ljava() {
-  if [ "x$LJAVA_HOME" != "x" ]; then
+  if [ "x$JAVA_HOME" != "x" ]; then
       LJAVA=${JAVA_HOME}/bin/java
       LJAR=${JAVA_HOME}/bin/jar
       LJAVAC=${JAVA_HOME}/bin/java
