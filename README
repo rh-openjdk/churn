@@ -8,26 +8,41 @@ Running
 
 There are scripts in the bin directory to run it with the various GCs
 available in Hotspot/OpenJDK
-
-  run-g1.sh
-  run-cms.sh
-  run-par.sh
-  run-shenandoah.sh
+  rung1.sh
+  runcms.sh
+  runpar.sh
+  runshenandoah.sh
+  runzgc.sh
+  runzgcgen.sh
 
 The scripts dump a suitably labelled gc log and output file showing
 the gc trace output and the program output e.g. if you execute
 run-g1.sh the fiels will be
-
   gclog-g1
   outlog-g1
 
 You can also run with the compressed oops optimization enabled using
 the following scripts
+  rung1-nocoops.sh
+  runcms-nocoops.sh
+  runpar-nocoops.sh
+  runshenandoah-nocoops.sh
+  runzgc-nocoops.sh
+  runzgcgen-nocoops.sh
 
-  run-g1-nocoops.sh
-  run-cms-nocoops.sh
-  run-par-nocoops.sh
-  run-shenandoah-nocoops.sh
+Next to it, there is also top level
+  run.sh
+Which is wrapping above bin/* by more reasonable defaults, and/or allows you to run them all.
+The top level run.sh can be called as:
+  run.sh <somegc>
+  run.sh "<gc1 gc2...>" (note the quotes) which then iterates through selectedGCs. 
+It accepts:   HEAPSIZE=3g  ITEMS=250  THREADS=2  DURATION=18000 # 5 hours (in seconds)#  COMPUTATIONS=64  BLOCKS=16 env variables
+Insted of via arguments, you may configure GC via variables: of OTOOL_garbageCollector and OTOOL_JDK_VERSION ; those, when OTOOL_garbageCollector havetwo additional values to argument:
+  ALL
+  defaultgc
+Where obviousy those needs OTOOL_JDK_VERSION set to 8,11...21 to properly determine default GC, or list of all GCs. The argument have priority over variable.
+The top level run.sh can generate junit-like xml at the end, and is compressing all the logs to single archive (they can be huge)
+Note, that if more then one gc is part of the  argument/OTOOL_garbageCollector final enumeration, the DURATION is split among them
 
 Arguments
 ---------
