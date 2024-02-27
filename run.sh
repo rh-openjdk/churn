@@ -9,6 +9,27 @@ done
 readonly CH_SCRIPT_DIR="$( cd -P "$( dirname "$SCRIPT_SOURCE" )" && pwd )"
 set -ex
 
+function ljava() {
+  if [ "x$JAVA_HOME" != "x" ]; then
+      LJAVA=${JAVA_HOME}/bin/java
+      LJAR=${JAVA_HOME}/bin/jar
+      LJAVAC=${JAVA_HOME}/bin/javac
+      echo "use java from JAVA_HOME [${LJAVA}]"
+      echo "use javac from JAVA_HOME [${LJAVAC}]"
+  elif [ $( which java ) ]; then
+      LJAVA=$( which java )
+      LJAR=$( which jar )
+      LJAVAC=$( which javac )
+      echo "use java from PATH [${LJAVA}]"
+      echo "use java from PATH [${LJAVAC}]"
+  else
+      echo "no java found!"
+      LJAVA=java
+      LJAR=jar
+      LJAVAC=javac
+  fi
+}
+
 GC=${1}
 if [ "x$GC" == "x" ] ; then
   #todo add generational zgc since jdk21, todo add generational shenandoah sicnce  jdk23?
@@ -54,10 +75,12 @@ if [ "x$GC" == "x" ] ; then
 fi
 
 if [ ! "x$STAMP"  == "x" ] ; then
+  ljava
   arch=`uname -m | sed "s/[^a-zA-Z0-9_]//g"`
   os=`uname -o | sed "s/[^a-zA-Z0-9_]//g"`
+  jdk=`${LJAVA} -version 2>&1 | head -n1 | sed "s/[^0-9]\+/-/g"`
   time=`date +%s`
-  STAMP="-${os}_${arch}_${time}"
+  STAMP="-${os}_${arch}_jdk${jdk}_${time}"
 fi
 # churn parameters sane defaults
 if [ "x$HEAPSIZE"  == "x" ] ; then
@@ -83,27 +106,6 @@ fi
 if [ "x$BLOCKS"  == "x" ] ; then
   BLOCKS=16
 fi
-
-function ljava() {
-  if [ "x$JAVA_HOME" != "x" ]; then
-      LJAVA=${JAVA_HOME}/bin/java
-      LJAR=${JAVA_HOME}/bin/jar
-      LJAVAC=${JAVA_HOME}/bin/javac
-      echo "use java from JAVA_HOME [${LJAVA}]"
-      echo "use javac from JAVA_HOME [${LJAVAC}]"
-  elif [ $( which java ) ]; then
-      LJAVA=$( which java )
-      LJAR=$( which jar )
-      LJAVAC=$( which javac )
-      echo "use java from PATH [${LJAVA}]"
-      echo "use java from PATH [${LJAVAC}]"
-  else
-      echo "no java found!"
-      LJAVA=java
-      LJAR=jar
-      LJAVAC=javac
-  fi
-}
 
 if [ ! -e ${CH_SCRIPT_DIR}/target ] ; then
   if which mvn ; then
