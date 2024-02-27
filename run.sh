@@ -185,20 +185,16 @@ popd
   fi
 ) || true
 
-if [ `readlink -f ${CH_SCRIPT_DIR}` == `pwd`  ] ; then
+
+#the logs are already packed
+if [ 0$gclogsCount -gt  0 ] ; then
+  rm -v ${CH_SCRIPT_DIR}/outlog* ${CH_SCRIPT_DIR}/gclog-* 
+else  
+  rm -v ${CH_SCRIPT_DIR}/outlog-*
+fi
+if [ ! `readlink -f ${CH_SCRIPT_DIR}` == `pwd`  ] ; then
   if [ 0$gclogsCount -gt  0 ] ; then
-    rm -v ${CH_SCRIPT_DIR}/outlog* ${CH_SCRIPT_DIR}/gclog-* 
-  else  
-    rm -v ${CH_SCRIPT_DIR}/outlog-*
-  fi
-else
-  if [ 0$gclogsCount -gt  0 ] ; then
-    mv -v ${CH_SCRIPT_DIR}/gclogs${NOCOMP}${STAMP}.tar.gz ${CH_SCRIPT_DIR}/outlog-* ${CH_SCRIPT_DIR}/gclog-*  .
-  else	
-    mv -v ${CH_SCRIPT_DIR}/gclogs${NOCOMP}${STAMP}.tar.gz ${CH_SCRIPT_DIR}/outlog-* .
-  fi
-  if [ -e ${CH_SCRIPT_DIR}/churn${NOCOMP}${STAMP}.jtr.xml.gz ] ; then
-    mv -v ${CH_SCRIPT_DIR}/churn${NOCOMP}${STAMP}.jtr.xml.gz .
+    mv -v ${CH_SCRIPT_DIR}/gclogs${NOCOMP}${STAMP}.tar.gz .
   fi
 fi
 
