@@ -78,7 +78,7 @@ if [ ! "x$STAMP"  == "x" ] ; then
   ljava
   arch=`uname -m | sed "s/[^a-zA-Z0-9_]//g"`
   os=`uname -o | sed "s/[^a-zA-Z0-9_]//g"`
-  jdk=`${LJAVA} -version 2>&1 | head -n1 | sed "s/[^0-9]\+/-/g"`
+  jdk=`${LJAVA} -version 2>&1 | head -n1 | sed -E "s/[^0-9]+/-/g"`
   time=`date +%s`
   STAMP="-${os}_${arch}_jdk${jdk}_${time}"
 fi
