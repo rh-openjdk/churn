@@ -49,22 +49,111 @@ function junitResults() {
     total=`echo $results | wc -w `
     pass=`echo "$results" | grep -e =0 | wc -l`
     fail=`echo "$results" | grep -e =1 | wc -l`
-    printXmlHeader $pass $fail $total 0 churn${NOCOMP} `hostname` > churn${NOCOMP}.jtr.xml
+    printXmlHeader $pass $fail $total 0 churn${NOCOMP} `hostname` > ${resultsXmlFile}
 	  for result in $results ;  do
-      name=`echo $result | sed "s/=.*//"`
-      if echo $result | grep -e "=0" ; then
-        printXmlTest churn $name $DURATION >> churn${NOCOMP}.jtr.xml
-      else
-        fileName=`ls outlog-$name-*`
-        printXmlTest churn $name $DURATION $fileName "$fileName and gclog-$name-* in gclogs${NOCOMP}${STAMP}.tar.gz" >> churn${NOCOMP}.jtr.xml
-      fi
-    done
-    printXmlFooter >> churn${NOCOMP}.jtr.xml
+        name=`echo $result | sed "s/=.*//"`
+        if echo $result | grep -e "=0" ; then
+          printXmlTest churn $name $DURATION >> ${resultsXmlFile}
+        else
+          fileName1=`ls outlog-$name-*`
+          fileName2=`ls gclog-$name-*`
+          printXmlTest churn $name $DURATION $fileName1 "$fileName1, outlog-$name-*, $fileName2 and gclog-$name-* in gclogs${NOCOMP}${STAMP}.tar.gz" >> ${resultsXmlFile}
+        fi
+      done
+    printXmlFooter >> ${resultsXmlFile}
     rm -v $jtrXml
     set -e
-    tar -cvzf churn${NOCOMP}${STAMP}.jtr.xml.tar.gz churn${NOCOMP}.jtr.xml
-    rm churn${NOCOMP}.jtr.xml
+    tar -cvzf ${jtrTarball} ${resultsXmlFile}
+    rm ${resultsXmlFile}
   fi
+) || true
+}
+
+
+## First mandatroy argument is number of tests
+## all others are strings, written in as header metadata
+function tapHeader() {
+  local counter=0
+  for var in "$@" ; do
+    let counter=$counter+1
+    if [ $counter -eq 1 ] ; then
+      echo "1..$var"
+    else
+      echo "# $var"
+    fi
+  done
+}
+
+function tapTestStart() {
+  local ok="$1"
+  local id="$2"
+  local title="$3"
+  if [ "$ok" == "ok" ] ; then
+    echo "ok $id - $title"
+  else
+    echo "not ok $id - $title"
+  fi
+  echo "  ---"
+}
+
+function tapTestEnd() {
+  echo "  ..."
+}
+
+function tapLine() {
+  local id="$1"
+  local line="$2"
+  echo "    $id: $line"
+}
+
+function tapFromFile() {
+  local file="$1"
+  local alilas="$2"
+  if [ ! -e "$file" ]; then
+    tapLine "$file/$alilas" "do not exists"
+  else
+    echo "    head $file/$alilas:"
+    echo "      |"
+    head "$file" -n 10 | while IFS= read -r line; do
+      line=`echo $line | sed 's/^\s*\|\s*$//g'`
+      echo "        $line"
+    done
+    echo "    grep $file/$alilas:"
+    echo "      |"
+    grep -n -i -e fail -e error -e "not ok" -B 0 -A 0 $file| while IFS= read -r line; do
+      line=`echo $line | sed 's/^\s*\|\s*$//g'`
+      echo "        $line"
+    done
+    echo "    tail $file/$alilas:"
+    echo "      |"
+    tail "$file" -n 10 | while IFS= read -r line; do
+      line=`echo $line | sed 's/^\s*\|\s*$//g'`
+      echo "        $line"
+    done
+  fi
+}
+
+function tapResults() {
+(
+    total=`echo $results | wc -w `
+    tapHeader "$total"  "`date`" > ${resultsTapFile}
+      counter=0;
+	  for result in $results ;  do
+        let counter=$counter+1;
+        name=`echo $result | sed "s/=.*//"`
+        fileName1=`ls outlog-$name-*`
+        fileName2=`ls gclog-$name-*`
+        if echo $result | grep -e "=0" ; then
+          tapTestStart "ok" "$counter" "$name" >> ${resultsTapFile}
+        else
+          tapTestStart "not ok" "$counter" "$name" >> ${resultsTapFile}
+        fi
+        tapLine "info" "churn $name duration of ${DURATION}s see $fileName1, outlog-$name-*, $fileName2 and gclog-$name-* in gclogs${NOCOMP}${STAMP}.tar.gz" >> ${resultsTapFile}
+        tapLine "duration_ms" "${DURATION}000" >> ${resultsTapFile}
+        tapFromFile "$fileName1" "outlog-$name-*">> ${resultsTapFile}
+        tapFromFile "$fileName2" "gclog-$name-*">> ${resultsTapFile}
+        tapTestEnd "$fileName">> ${resultsTapFile}
+      done
 ) || true
 }
 
@@ -186,10 +275,16 @@ $gc=$one_result"
   else
     tar -cvzf gclogs${NOCOMP}${STAMP}.tar.gz outlog-*
   fi
-popd
 
-#optionally generate juit result file
-junitResults
+  #optionally generate juit and tap results files
+  resultsXmlFile=churn${NOCOMP}.jtr.xml
+  jtrTarball=churn${NOCOMP}${STAMP}.jtr.xml.tar.gz
+  resultsTapFile=churn${NOCOMP}${STAMP}.tap
+  set +x
+    junitResults
+    tapResults
+  set -x
+popd
 
 #the logs are already packed
 if [ 0$gclogsCount -gt  0 ] ; then
@@ -198,9 +293,13 @@ else
   rm -v ${CH_SCRIPT_DIR}/outlog-*
 fi
 if [ ! `readlink -f ${CH_SCRIPT_DIR}` == `pwd`  ] ; then
-  if [ 0$gclogsCount -gt  0 ] ; then
     mv -v ${CH_SCRIPT_DIR}/gclogs${NOCOMP}${STAMP}.tar.gz .
-  fi
+    if [ -e ${CH_SCRIPT_DIR}/$jtrTarball ] ; then
+      mv -v ${CH_SCRIPT_DIR}/$jtrTarball .
+    fi
+    if [ -e ${CH_SCRIPT_DIR}/$resultsTapFile ] ; then
+      mv -v ${CH_SCRIPT_DIR}/$resultsTapFile .
+    fi
 fi
 
 echo "$results"
