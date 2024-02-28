@@ -103,19 +103,8 @@ function tapResults() {
 GC=${1}
 if [ "x$GC" == "x" ] ; then
   #todo add generational zgc since jdk21, todo add generational shenandoah sicnce  jdk23?
-  #todo, remove shentraver iirc (not sure when)
-  if [ "x$OTOOL_garbageCollector" == "xshenandoah" ] ; then
+  if [ "x$OTOOL_garbageCollector" == "xshentraver" ] ; then
     GC=shenandoah
-  elif [ "x$OTOOL_garbageCollector" == "xshentraver" ] ; then
-    GC=shenandoah
-  elif [ "x$OTOOL_garbageCollector" == "xzgc" ] ; then
-    GC=zgc
-  elif [ "x$OTOOL_garbageCollector" == "xcms" ] ; then
-    GC=cms
-  elif [ "x$OTOOL_garbageCollector" == "xpar" ] ; then
-    GC=par
-  elif [ "x$OTOOL_garbageCollector" == "xg1" ] ; then
-    GC=g1
   elif [ "x$OTOOL_garbageCollector" == "xALL" ] ; then
 	if [ "x$OTOOL_JDK_VERSION" == "x" ] ; then
       GC="shenandoah zgc cms par g1" ## unset, main set set
@@ -135,6 +124,8 @@ if [ "x$GC" == "x" ] ; then
     else
       GC=g1
     fi
+  else
+    GC="$OTOOL_garbageCollector"
   fi
 fi
 
