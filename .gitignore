@@ -7,3 +7,4 @@ gclog*
 outlog*
 
 *.jtr.xml.tar.gz
+churn*.tap

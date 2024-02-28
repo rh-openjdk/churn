@@ -46,7 +46,9 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
         with:
-          path: "*.tar.gz"
+          path: |
+              *.tar.gz
+              *.tap
 
   test-win:
     name: "Windows"
@@ -88,7 +90,9 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
         with:
-          path: "*.tar.gz"
+          path: |
+              *.tar.gz
+              *.tap
 
   test-macos:
     name: "MacOS"
@@ -123,7 +127,9 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
         with:
-          path: "*.tar.gz"
+          path: |
+              *.tar.gz
+              *.tap
 ###############
 #### jdk21 end
 ###############
@@ -162,8 +168,9 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
         with:
-          path: "*.tar.gz"
-
+          path: |
+              *.tar.gz
+              *.tap
   test-win-jdk8:
     name: "Windows"
     runs-on: "windows-latest"
@@ -203,7 +210,9 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
         with:
-          path: "*.tar.gz"
+          path: |
+              *.tar.gz
+              *.tap
 
   test-macos-jdk8:
     name: "MacOS"
@@ -237,7 +246,9 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
         with:
-          path: "*.tar.gz"
+          path: |
+              *.tar.gz
+              *.tap
 ###############
 #### jdk8  end
 ###############
@@ -276,7 +287,9 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
         with:
-          path: "*.tar.gz"
+          path: |
+              *.tar.gz
+              *.tap
 
   test-win-jdk11:
     name: "Windows"
@@ -317,7 +330,9 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
         with:
-          path: "*.tar.gz"
+          path: |
+              *.tar.gz
+              *.tap
 
   test-macos-jdk11:
     name: "MacOS"
@@ -351,7 +366,9 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
         with:
-          path: "*.tar.gz"
+          path: |
+              *.tar.gz
+              *.tap
 ###############
 #### jdk11 end
 ###############
@@ -390,7 +407,9 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
         with:
-          path: "*.tar.gz"
+          path: |
+              *.tar.gz
+              *.tap"
 
   test-win-jdk17:
     name: "Windows"
@@ -431,7 +450,9 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
         with:
-          path: "*.tar.gz"
+          path: |
+              *.tar.gz
+              *.tap
 
   test-macos-jdk17:
     name: "MacOS"
@@ -465,7 +486,9 @@ jobs:
         if: ${{ always() }}
         uses: actions/upload-artifact@v3
         with:
-          path: "*.tar.gz"
+          path: |
+              *.tar.gz
+              *.tap
 ###############
 #### jdk17 end
 ###############

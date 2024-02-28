@@ -30,6 +30,76 @@ function ljava() {
   fi
 }
 
+function globalInfo() {
+  uname -a > outlog-global
+  ljava
+  ${LJAVA} -version 2>>outlog-global || true
+  echo "NOCOMP=${NOCOMP}">>outlog-global
+  echo "GC=${GC}">>outlog-global
+  echo "OTOOL_garbageCollector=${OTOOL_garbageCollector}">>outlog-global
+  echo "OTOOL_JDK_VERSION=${OTOOL_JDK_VERSION}">>outlog-global
+}
+
+function junitResults() {
+(
+  wget https://raw.githubusercontent.com/rh-openjdk/run-folder-as-tests/main/jtreg-shell-xml.sh;
+  jtrXml=`pwd`/jtreg-shell-xml.sh
+  if [ -e $jtrXml ] ; then
+    source  $jtrXml
+    total=`echo $results | wc -w `
+    pass=`echo "$results" | grep -e =0 | wc -l`
+    fail=`echo "$results" | grep -e =1 | wc -l`
+    printXmlHeader $pass $fail $total 0 churn${NOCOMP} `hostname` > ${resultsXmlFile}
+	  for result in $results ;  do
+        name=`echo $result | sed "s/=.*//"`
+        if echo $result | grep -e "=0" ; then
+          printXmlTest churn $name $DURATION >> ${resultsXmlFile}
+        else
+          fileName1=`ls outlog-$name-*`
+          fileName2=`ls gclog-$name-*`
+          printXmlTest churn $name $DURATION $fileName1 "$fileName1, outlog-$name-*, $fileName2 and gclog-$name-* in gclogs${NOCOMP}${STAMP}.tar.gz" >> ${resultsXmlFile}
+        fi
+      done
+    printXmlFooter >> ${resultsXmlFile}
+    rm -v $jtrXml
+    set -e
+    tar -cvzf ${jtrTarball} ${resultsXmlFile}
+    rm ${resultsXmlFile}
+  fi
+) || true
+}
+
+function tapResults() {
+(
+  wget https://raw.githubusercontent.com/rh-openjdk/run-folder-as-tests/main/tap-shell-tap.sh;
+  taptap=`pwd`/tap-shell-tap.sh
+  if [ -e $taptap ] ; then
+    source  $taptap
+    total=`echo $results | wc -w `
+    tapHeader "$total"  "`date`" > ${resultsTapFile}
+      counter=0;
+	  for result in $results ;  do
+        let counter=$counter+1;
+        name=`echo $result | sed "s/=.*//"`
+        fileName1=`ls outlog-$name-*`
+        fileName2=`ls gclog-$name-*`
+        if echo $result | grep -e "=0" ; then
+          tapTestStart "ok" "$counter" "$name" >> ${resultsTapFile}
+        else
+          tapTestStart "not ok" "$counter" "$name" >> ${resultsTapFile}
+        fi
+        tapLine "info" "churn $name duration of ${DURATION}s see $fileName1, outlog-$name-*, $fileName2 and gclog-$name-* in gclogs${NOCOMP}${STAMP}.tar.gz" >> ${resultsTapFile}
+        tapLine "duration_ms" "${DURATION}000" >> ${resultsTapFile}
+        tapFromFile "$fileName1" "outlog-$name-*">> ${resultsTapFile}
+        tapFromFile "$fileName2" "gclog-$name-*">> ${resultsTapFile}
+        tapTestEnd "$fileName">> ${resultsTapFile}
+      done
+  rm -v $taptap
+  fi
+) || true
+}
+
+
 GC=${1}
 if [ "x$GC" == "x" ] ; then
   #todo add generational zgc since jdk21, todo add generational shenandoah sicnce  jdk23?
@@ -126,17 +196,6 @@ if [ ! -e ${CH_SCRIPT_DIR}/target ] ; then
   fi
 fi
 
-
-function globalInfo() {
-  uname -a > outlog-global
-  ljava
-  ${LJAVA} -version 2>>outlog-global || true
-  echo "NOCOMP=${NOCOMP}">>outlog-global
-  echo "GC=${GC}">>outlog-global
-  echo "OTOOL_garbageCollector=${OTOOL_garbageCollector}">>outlog-global
-  echo "OTOOL_JDK_VERSION=${OTOOL_JDK_VERSION}">>outlog-global
-}
-
 results=""
 pushd ${CH_SCRIPT_DIR}
   globalInfo
@@ -158,35 +217,16 @@ $gc=$one_result"
   else
     tar -cvzf gclogs${NOCOMP}${STAMP}.tar.gz outlog-*
   fi
+
+  #optionally generate juit and tap results files
+  resultsXmlFile=churn${NOCOMP}.jtr.xml
+  jtrTarball=churn${NOCOMP}${STAMP}.jtr.xml.tar.gz
+  resultsTapFile=churn${NOCOMP}${STAMP}.tap
+  set +x
+    junitResults
+    tapResults
+  set -x
 popd
-
-#optionally generate juit result file
-(
-  wget https://raw.githubusercontent.com/rh-openjdk/run-folder-as-tests/main/jtreg-shell-xml.sh;
-  jtrXml=`pwd`/jtreg-shell-xml.sh
-  if [ -e $jtrXml ] ; then
-    source  $jtrXml
-    total=`echo $results | wc -w `
-    pass=`echo "$results" | grep -e =0 | wc -l`
-    fail=`echo "$results" | grep -e =1 | wc -l`
-    printXmlHeader $pass $fail $total 0 churn${NOCOMP} `hostname` > churn${NOCOMP}.jtr.xml
-	  for result in $results ;  do
-      name=`echo $result | sed "s/=.*//"`
-      if echo $result | grep -e "=0" ; then
-        printXmlTest churn $name $DURATION >> churn${NOCOMP}.jtr.xml
-      else
-        fileName=`ls outlog-$name-*`
-        printXmlTest churn $name $DURATION $fileName "$fileName and gclog-$name-* in gclogs${NOCOMP}${STAMP}.tar.gz" >> churn${NOCOMP}.jtr.xml
-      fi
-    done
-    printXmlFooter >> churn${NOCOMP}.jtr.xml
-    rm -v $jtrXml
-    set -e
-    tar -cvzf churn${NOCOMP}${STAMP}.jtr.xml.tar.gz churn${NOCOMP}.jtr.xml
-    rm churn${NOCOMP}.jtr.xml
-  fi
-) || true
-
 
 #the logs are already packed
 if [ 0$gclogsCount -gt  0 ] ; then
@@ -195,9 +235,13 @@ else
   rm -v ${CH_SCRIPT_DIR}/outlog-*
 fi
 if [ ! `readlink -f ${CH_SCRIPT_DIR}` == `pwd`  ] ; then
-  if [ 0$gclogsCount -gt  0 ] ; then
     mv -v ${CH_SCRIPT_DIR}/gclogs${NOCOMP}${STAMP}.tar.gz .
-  fi
+    if [ -e ${CH_SCRIPT_DIR}/$jtrTarball ] ; then
+      mv -v ${CH_SCRIPT_DIR}/$jtrTarball .
+    fi
+    if [ -e ${CH_SCRIPT_DIR}/$resultsTapFile ] ; then
+      mv -v ${CH_SCRIPT_DIR}/$resultsTapFile .
+    fi
 fi
 
 echo "$results"
