@@ -30,6 +30,45 @@ function ljava() {
   fi
 }
 
+function globalInfo() {
+  uname -a > outlog-global
+  ljava
+  ${LJAVA} -version 2>>outlog-global || true
+  echo "NOCOMP=${NOCOMP}">>outlog-global
+  echo "GC=${GC}">>outlog-global
+  echo "OTOOL_garbageCollector=${OTOOL_garbageCollector}">>outlog-global
+  echo "OTOOL_JDK_VERSION=${OTOOL_JDK_VERSION}">>outlog-global
+}
+
+function junitResults() {
+(
+  wget https://raw.githubusercontent.com/rh-openjdk/run-folder-as-tests/main/jtreg-shell-xml.sh;
+  jtrXml=`pwd`/jtreg-shell-xml.sh
+  if [ -e $jtrXml ] ; then
+    source  $jtrXml
+    total=`echo $results | wc -w `
+    pass=`echo "$results" | grep -e =0 | wc -l`
+    fail=`echo "$results" | grep -e =1 | wc -l`
+    printXmlHeader $pass $fail $total 0 churn${NOCOMP} `hostname` > churn${NOCOMP}.jtr.xml
+	  for result in $results ;  do
+      name=`echo $result | sed "s/=.*//"`
+      if echo $result | grep -e "=0" ; then
+        printXmlTest churn $name $DURATION >> churn${NOCOMP}.jtr.xml
+      else
+        fileName=`ls outlog-$name-*`
+        printXmlTest churn $name $DURATION $fileName "$fileName and gclog-$name-* in gclogs${NOCOMP}${STAMP}.tar.gz" >> churn${NOCOMP}.jtr.xml
+      fi
+    done
+    printXmlFooter >> churn${NOCOMP}.jtr.xml
+    rm -v $jtrXml
+    set -e
+    tar -cvzf churn${NOCOMP}${STAMP}.jtr.xml.tar.gz churn${NOCOMP}.jtr.xml
+    rm churn${NOCOMP}.jtr.xml
+  fi
+) || true
+}
+
+
 GC=${1}
 if [ "x$GC" == "x" ] ; then
   #todo add generational zgc since jdk21, todo add generational shenandoah sicnce  jdk23?
@@ -126,17 +165,6 @@ if [ ! -e ${CH_SCRIPT_DIR}/target ] ; then
   fi
 fi
 
-
-function globalInfo() {
-  uname -a > outlog-global
-  ljava
-  ${LJAVA} -version 2>>outlog-global || true
-  echo "NOCOMP=${NOCOMP}">>outlog-global
-  echo "GC=${GC}">>outlog-global
-  echo "OTOOL_garbageCollector=${OTOOL_garbageCollector}">>outlog-global
-  echo "OTOOL_JDK_VERSION=${OTOOL_JDK_VERSION}">>outlog-global
-}
-
 results=""
 pushd ${CH_SCRIPT_DIR}
   globalInfo
@@ -161,32 +189,7 @@ $gc=$one_result"
 popd
 
 #optionally generate juit result file
-(
-  wget https://raw.githubusercontent.com/rh-openjdk/run-folder-as-tests/main/jtreg-shell-xml.sh;
-  jtrXml=`pwd`/jtreg-shell-xml.sh
-  if [ -e $jtrXml ] ; then
-    source  $jtrXml
-    total=`echo $results | wc -w `
-    pass=`echo "$results" | grep -e =0 | wc -l`
-    fail=`echo "$results" | grep -e =1 | wc -l`
-    printXmlHeader $pass $fail $total 0 churn${NOCOMP} `hostname` > churn${NOCOMP}.jtr.xml
-	  for result in $results ;  do
-      name=`echo $result | sed "s/=.*//"`
-      if echo $result | grep -e "=0" ; then
-        printXmlTest churn $name $DURATION >> churn${NOCOMP}.jtr.xml
-      else
-        fileName=`ls outlog-$name-*`
-        printXmlTest churn $name $DURATION $fileName "$fileName and gclog-$name-* in gclogs${NOCOMP}${STAMP}.tar.gz" >> churn${NOCOMP}.jtr.xml
-      fi
-    done
-    printXmlFooter >> churn${NOCOMP}.jtr.xml
-    rm -v $jtrXml
-    set -e
-    tar -cvzf churn${NOCOMP}${STAMP}.jtr.xml.tar.gz churn${NOCOMP}.jtr.xml
-    rm churn${NOCOMP}.jtr.xml
-  fi
-) || true
-
+junitResults
 
 #the logs are already packed
 if [ 0$gclogsCount -gt  0 ] ; then
