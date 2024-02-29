@@ -9,7 +9,7 @@ done
 readonly CH_SCRIPT_DIR="$( cd -P "$( dirname "$SCRIPT_SOURCE" )" && pwd )"
 set -ex
 
-function ljava() {
+function getjava() {
   if [ "x$JAVA_HOME" != "x" ]; then
       LJAVA=${JAVA_HOME}/bin/java
       LJAR=${JAVA_HOME}/bin/jar
@@ -30,9 +30,12 @@ function ljava() {
   fi
 }
 
+function checkXX() {
+   ${LJAVA} -XX:+PrintFlagsFinal -version 2>/dev/null | grep -e ${1}
+}
+
 function globalInfo() {
   uname -a > outlog-global
-  ljava
   ${LJAVA} -version 2>>outlog-global || true
   echo "NOCOMP=${NOCOMP}">>outlog-global
   echo "GC=${GC}">>outlog-global
@@ -99,6 +102,7 @@ function tapResults() {
 ) || true
 }
 
+getjava
 
 GC=${1}
 if [ "x$GC" == "x" ] ; then
@@ -106,17 +110,27 @@ if [ "x$GC" == "x" ] ; then
   if [ "x$OTOOL_garbageCollector" == "xshentraver" ] ; then
     GC=shenandoah
   elif [ "x$OTOOL_garbageCollector" == "xALL" ] ; then
-	if [ "x$OTOOL_JDK_VERSION" == "x" ] ; then
-      GC="shenandoah zgc cms par g1" ## unset, main set set
-    elif [ "0$OTOOL_JDK_VERSION" -le 7  ] ; then
-      GC="               cms  par g1" ## we claim adoptium jdk8 as 7, as it do not have shenandoah.
-  	elif [ "0$OTOOL_JDK_VERSION" -ge 8  -a "0$OTOOL_JDK_VERSION" -le 11 ] ; then
-      GC="shenandoah     cms  par g1" # zgc arrived in jdk11
-	elif [ "0$OTOOL_JDK_VERSION" -gt 11  -a "0$OTOOL_JDK_VERSION" -le 20 ] ; then
-      GC="shenandoah zgc          g1" # no more cms or par
-    else
-     # in jdk 21 arrived generational zgc
-     GC="shenandoah zgc           g1 zgcgen" # zgcgem arrived in jdk21
+    GC=""
+    if checkXX UseShenandoahGC ; then 
+      GC="$GC shenandoah"
+    fi
+    if checkXX UseZGC ; then 
+      GC="$GC zgc"
+      if checkXX ZGenerational ; then 
+        GC="$GC zgcgen"
+      fi
+    fi
+    if checkXX UseConcMarkSweepGC ; then 
+      GC="$GC cms"
+    fi
+    if checkXX UseParallelGC ; then 
+      GC="$GC par"
+      if checkXX UseParallelOldGC ; then 
+        GC="$GC parold"
+      fi
+    fi
+    if checkXX UseG1GC ; then 
+      GC="$GC g1"
     fi
   elif [ "x$OTOOL_garbageCollector" == "xdefaultgc" ] ; then
     if [ "0$OTOOL_JDK_VERSION" -le 8 ] ; then
@@ -130,13 +144,13 @@ if [ "x$GC" == "x" ] ; then
 fi
 
 echo "GC=$GC"  >&2
+
 if [ "x$GC" == "x" ] ; then
   echo 'expected exactly one command line argument - garbage collector [g1|cms|par|shenandoah] or use OTOOL_garbageCollector variabnle with same values + two more - "defaultgc" and "ALL", wich will cause this to use default gc or iterate through all GCs (time will be divided). You should accompany it by OTOOL_JDK_VERSION=<8..21> so the proper set of jdks is chosen. Use NOCOMP=-nocoops to disable compressed oops.' >&2  
   exit 1
 fi
 
 if [ ! "x$STAMP"  == "x" ] ; then
-  ljava
   arch=`uname -m | sed "s/[^a-zA-Z0-9_]//g"`
   os=`uname -o | sed "s/[^a-zA-Z0-9_]//g"`
   jdk=`${LJAVA} -version 2>&1 | head -n1 | sed -E "s/[^0-9]+/-/g"`
@@ -177,7 +191,6 @@ if [ ! -e ${CH_SCRIPT_DIR}/target ] ; then
       mvn $MVOPTS install
     popd
   else
-    ljava
     pushd $CH_SCRIPT_DIR/src/main/java/
       ${LJAVAC} -d $CH_SCRIPT_DIR/target/classes `find . -type f | grep ".java$"`
       pushd $CH_SCRIPT_DIR/target/classes
