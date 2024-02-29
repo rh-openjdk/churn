@@ -17,9 +17,9 @@ function ljava() {
       echo "use java from JAVA_HOME [${LJAVA}]"
       echo "use javac from JAVA_HOME [${LJAVAC}]"
   elif [ $( which java ) ]; then
-      LJAVA=$( which java )
-      LJAR=$( which jar )
-      LJAVAC=$( which javac )
+      LJAVA=$( readlink -f $(which   java) )
+      LJAVAC=$( readlink -f $(which   javac) )
+      LJAR="$(dirname ${LJAVAC})/jar"
       echo "use java from PATH [${LJAVA}]"
       echo "use java from PATH [${LJAVAC}]"
   else
