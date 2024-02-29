@@ -25,6 +25,6 @@
 #
 # set up GC_SPECIFIC_OPTS for parallel collector
 # and append par tag to gc log file name
-export GC_SPECIFIC_OPTS="-XX:+UseParallelGC"
-export GC_LOG_FILE="${GC_LOG_FILE}-par"
-export OUT_LOG_FILE="${OUT_LOG_FILE}-par"
+export GC_SPECIFIC_OPTS="-XX:+UseParallelGC -XX:+UseParallelOldGC"
+export GC_LOG_FILE="${GC_LOG_FILE}-parold"
+export OUT_LOG_FILE="${OUT_LOG_FILE}-parold"

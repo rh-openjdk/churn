@@ -1,3 +1,4 @@
+#!/bin/bash
 #
 # JBoss, Home of Professional Open Source
 # Copyright 2011, Red Hat and individual contributors
@@ -21,10 +22,8 @@
 #
 # @authors Andrew Dinn
 #
-# setup script to use parallel collector
-#
-# set up GC_SPECIFIC_OPTS for parallel collector
-# and append par tag to gc log file name
-export GC_SPECIFIC_OPTS="-XX:+UseParallelGC"
-export GC_LOG_FILE="${GC_LOG_FILE}-par"
-export OUT_LOG_FILE="${OUT_LOG_FILE}-par"
+WD=`dirname $0`
+. $WD/setup.sh
+. $WD/parold.sh
+. $WD/nocoops.sh
+exec $WD/run.sh $*
