@@ -135,8 +135,12 @@ if [ "x$GC" == "x" ] ; then
   elif [ "x$OTOOL_garbageCollector" == "xdefaultgc" ] ; then
     if [ "0$OTOOL_JDK_VERSION" -le 8 ] ; then
       GC=par
+      echo "double checking default gc is correct:"
+      checkXX UseParallelGC | grep  true
     else
       GC=g1
+      echo "double checking default gc is correct:"
+      checkXX UseG1GC | grep  true
     fi
   else
     GC="$OTOOL_garbageCollector"
