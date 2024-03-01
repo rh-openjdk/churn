@@ -30,6 +30,21 @@ function getjava() {
   fi
 }
 
+function depath() {
+  echo "${1}" | depathStream
+}
+
+function depathStream() {
+  platform="$(uname)"
+  while IFS= read -r line ; do
+    if [ "${platform#"CYGWIN_NT"}" != "$platform" ]; then
+      cygpath -w "${line}"
+    else
+      echo "${line}"
+    fi
+  done
+}
+
 function checkXX() {
    ${LJAVA} -XX:+PrintFlagsFinal -version 2>/dev/null | grep -e ${1}
 }
@@ -196,9 +211,9 @@ if [ ! -e ${CH_SCRIPT_DIR}/target ] ; then
     popd
   else
     pushd $CH_SCRIPT_DIR/src/main/java/
-      ${LJAVAC} -d $CH_SCRIPT_DIR/target/classes `find . -type f | grep ".java$"`
+      ${LJAVAC} -d $(depath $CH_SCRIPT_DIR/target/classes) `find . -type f | grep ".java$" | depathStream`
       pushd $CH_SCRIPT_DIR/target/classes
-        ${LJAR} -cf $CH_SCRIPT_DIR/target/churn-1.0.jar *
+        ${LJAR} -cf $(depath $CH_SCRIPT_DIR/target/churn-1.0.jar) *
       popd
     popd
   fi
