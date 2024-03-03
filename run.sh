@@ -246,10 +246,10 @@ $gc=$one_result"
   jtrTarball=churn${NOCOMP}${STAMP}.jtr.xml.tar.gz
   resultsTapFile=churn${NOCOMP}${STAMP}.tap
   set +x
-    if [ "x$CHURN_JUNIT" == "" -o "x$CHURN_JUNIT" == "true" ] ; then
+    if [ "x$CHURN_JUNIT" == "x" -o "x$CHURN_JUNIT" == "xtrue" ] ; then
       junitResults
     fi
-    if [ "x$CHURN_TAP" == "" -o "x$CHURN_TAP" == "true" ] ; then
+    if [ "x$CHURN_TAP" == "x" -o "x$CHURN_TAP" == "xtrue" ] ; then
         tapResults
     fi
   set -x
