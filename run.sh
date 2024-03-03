@@ -75,7 +75,7 @@ function junitResults() {
         else
           fileName1=`ls outlog-$name-*`
           fileName2=`ls gclog-$name-*`
-          printXmlTest churn $name $DURATION $fileName1 "$fileName1, outlog-$name-*, $fileName2 and gclog-$name-* in gclogs${NOCOMP}${STAMP}.tar.gz" >> ${resultsXmlFile}
+          printXmlTest churn $name $DURATION $fileName1 "$fileName1, outlog-$name-*, gclog-$name-* in gclogs${NOCOMP}${STAMP}.tar.gz" >> ${resultsXmlFile}
         fi
       done
     printXmlFooter >> ${resultsXmlFile}
@@ -106,10 +106,11 @@ function tapResults() {
         else
           tapTestStart "not ok" "$counter" "$name" >> ${resultsTapFile}
         fi
-        tapLine "info" "churn $name duration of ${DURATION}s see $fileName1, outlog-$name-*, $fileName2 and gclog-$name-* in gclogs${NOCOMP}${STAMP}.tar.gz" >> ${resultsTapFile}
+        tapLine "info" "churn $name duration of ${DURATION}s see $fileName1, outlog-$name-*, gclog-$name-* in gclogs${NOCOMP}${STAMP}.tar.gz" >> ${resultsTapFile}
         tapLine "duration_ms" "${DURATION}000" >> ${resultsTapFile}
         tapFromFile "$fileName1" "outlog-$name-*">> ${resultsTapFile}
-        tapFromFile "$fileName2" "gclog-$name-*">> ${resultsTapFile}
+        # gclog now disabled - sometimes to big, sometimes several of them (easy to merge, but...), sometimes with buggy content
+        #tapFromFile "$fileName2" "gclog-$name-*">> ${resultsTapFile}
         tapTestEnd "$fileName">> ${resultsTapFile}
       done
   rm -v $taptap
