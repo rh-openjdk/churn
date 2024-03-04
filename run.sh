@@ -53,9 +53,10 @@ function globalInfo() {
   uname -a > outlog-global
   ${LJAVA} -version 2>>outlog-global || true
   echo "NOCOMP=${NOCOMP}">>outlog-global
+  echo "DURATION=${DURATION}">>outlog-global
   echo "GC=${GC}">>outlog-global
+  echo "GC_ARG=${GC_ARG}">>outlog-global
   echo "OTOOL_garbageCollector=${OTOOL_garbageCollector}">>outlog-global
-  echo "OTOOL_JDK_VERSION=${OTOOL_JDK_VERSION}">>outlog-global
 }
 
 function junitResults() {
@@ -120,12 +121,26 @@ function tapResults() {
 
 getjava
 
-GC=${1}
-if [ "x$GC" == "x" ] ; then
-  #todo add generational zgc since jdk21, todo add generational shenandoah sicnce  jdk23?
-  if [ "x$OTOOL_garbageCollector" == "xshentraver" ] ; then
+GC_ARG=${1}
+if [ "x$OTOOL_garbageCollector" = "x" ] ; then
+ GC_ARG=${GC_ARG}
+else
+ GC_ARG=${OTOOL_garbageCollector}
+fi
+DURATION_ARG=${2}
+if [ "x$DURATION" = "x" ] ; then
+ DURATION=${DURATION_ARG}
+else
+ DURATION=${DURATION}
+fi
+if [ "x$DURATION"  == "x" ] ; then
+  DURATION=18000 # 5 hours (in seconds)
+fi
+
+#determine ALL/defaultgc and some aliases GC_ARG
+  if [ "x$GC_ARG" == "xshentraver" ] ; then
     GC=shenandoah
-  elif [ "x$OTOOL_garbageCollector" == "xALL" ] ; then
+  elif [ "x$GC_ARG" == "xALL" ] ; then
     GC=""
     if checkXX UseShenandoahGC ; then 
       GC="$GC shenandoah"
@@ -148,25 +163,40 @@ if [ "x$GC" == "x" ] ; then
     if checkXX UseG1GC ; then 
       GC="$GC g1"
     fi
-  elif [ "x$OTOOL_garbageCollector" == "xdefaultgc" ] ; then
-    if [ "0$OTOOL_JDK_VERSION" -le 8 ] ; then
+  elif [ "x$GC_ARG" == "xdefaultgc" ] ; then
+    if checkXX UseParallelGC | grep  true ; then
       GC=par
-      echo "double checking default gc is correct:"
-      checkXX UseParallelGC | grep  true
-    else
+    elif checkXX UseG1GC | grep  true ; then
       GC=g1
-      echo "double checking default gc is correct:"
-      checkXX UseG1GC | grep  true
+    else
+      echo "Unknown default gc!"
+      exit 2
     fi
   else
-    GC="$OTOOL_garbageCollector"
+    GC="$GC_ARG"
   fi
-fi
+
 
 echo "GC=$GC"  >&2
 
 if [ "x$GC" == "x" ] ; then
-  echo 'expected exactly one command line argument - garbage collector [g1|cms|par|shenandoah] or use OTOOL_garbageCollector variabnle with same values + two more - "defaultgc" and "ALL", wich will cause this to use default gc or iterate through all GCs (time will be divided). You should accompany it by OTOOL_JDK_VERSION=<8..21> so the proper set of jdks is chosen. Use NOCOMP=-nocoops to disable compressed oops.' >&2  
+  set +x
+  echo 'expected 1 mandatory and up to one optional positional command-line argument:
+    mandatory garbage collector [g1|cms|par|parold|zgc|zgcgen|shenandoah|ALL|defaultgc]
+    optional DURATION in seconds (but set up few hours for some real testing)
+This script takes many environment values to tune the run, here is the list with defaults:
+    HEAPSIZE=3g
+    ITEMS=250
+    THREADS=2
+    COMPUTATIONS=64
+    BLOCKS=16
+    DURATION=18000 # 5 hours (in seconds)
+    OTOOL_garbageCollector # to set GC, no default
+    JAVA_HOME is used by default, if not there, is set from path
+and a bit special :
+    NOCOMP
+    which is empty, by default, and can take exactly one vlauer NOCOMP=-nocoops to disable compressed oops.
+The variables have priority over arguments. Namely OTOOL_garbageCollector and DURATION over 1st and 2nd arg' >&2  
   exit 1
 fi
 
@@ -187,10 +217,7 @@ fi
 if [ "x$THREADS"  == "x" ] ; then
   THREADS=2
 fi
-if [ "x$DURATION"  == "x" ] ; then
-  DURATION=18000 # 5 hours (in seconds)
-fi
-if [ "x$OTOOL_garbageCollector" == "xALL" ] ; then
+if [ "x$GC_ARG" == "xALL" ] ; then
   gcs=`echo "$GC" | wc -w`
   let "DURATION=$DURATION/$gcs"
   echo "all GCs will run. Time per one is: $DURATION"
