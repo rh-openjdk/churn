@@ -2,6 +2,7 @@ Building
 --------
 
 You build the churn application using mvn package.
+However javac can do just fine, and if no maven is around, the top level run.sh will use it.
 
 Running
 -------
@@ -11,6 +12,7 @@ available in Hotspot/OpenJDK
   rung1.sh
   runcms.sh
   runpar.sh
+  runparold.sh
   runshenandoah.sh
   runzgc.sh
   runzgcgen.sh
@@ -26,24 +28,23 @@ the following scripts
   rung1-nocoops.sh
   runcms-nocoops.sh
   runpar-nocoops.sh
+  runparold-nocoops.sh
   runshenandoah-nocoops.sh
   runzgc-nocoops.sh
   runzgcgen-nocoops.sh
 
 Next to it, there is also top level
   run.sh
-Which is wrapping above bin/* by more reasonable defaults, and/or allows you to run them all.
+Which is wrapping above bin/* by more reasonable defaults, and/or allows you to run them ALL/defaultgc
 The top level run.sh can be called as:
-  run.sh <somegc>
-  run.sh "<gc1 gc2...>" (note the quotes) which then iterates through selectedGCs. 
-It accepts:   HEAPSIZE=3g  ITEMS=250  THREADS=2  DURATION=18000 # 5 hours (in seconds)#  COMPUTATIONS=64  BLOCKS=16 env variables
-Insted of via arguments, you may configure GC via variables: of OTOOL_garbageCollector and OTOOL_JDK_VERSION ; those, when OTOOL_garbageCollector havetwo additional values to argument:
-  ALL
-  defaultgc
-Where obviousy those needs OTOOL_JDK_VERSION set to 8,11...21 to properly determine default GC, or list of all GCs. The argument have priority over variable.
-The top level run.sh can generate junit-like xml at the end, and is compressing all the logs to single archive (they can be huge)
+  run.sh <somegc> <someseconds>
+  run.sh "<gc1 gc2...>" (note the quotes) which then iterates through selectedGCs or set ALL to try all GCs
+  eg: run.sh "zgc shenandoah" 36000 which will run 10 hours zgc and then 10 hours of shenandoah. If you JVM do notsupport any of them, it will fail
+It accepts:   HEAPSIZE=3g  ITEMS=250  THREADS=2  DURATION=18000 # 5 hours (in seconds)#  COMPUTATIONS=64  BLOCKS=16 OTOOL_garbageCollector and JAVA_HOME env variables
+The variables have priority over arguments
+The top level run.sh can generate junit-like xml and tapfile at the end, and is compressing all the logs to single archive (they can be huge)
 Note, that if more then one gc is part of the  argument/OTOOL_garbageCollector final enumeration, the DURATION applied to each of them. if you use ALL, the DURATION is split among final set (as you never know how much you will actually run)
-The top level run.sh is the only runner whcih can run from custom directory.
+The top level run.sh is the only runner which can run from custom directory.
 
 Arguments
 ---------
